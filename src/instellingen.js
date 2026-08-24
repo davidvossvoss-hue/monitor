@@ -15,6 +15,7 @@
   }
 
   function render(state) {
+    var root = window;
     var i = state.instellingen;
     var a = M.berekenAlles(state);
     var h = '<div class="wrap">';
@@ -98,8 +99,12 @@
 
     // ---- data
     h += '<section class="blok"><h2 class="kop">Gegevens</h2><div class="kaart">' +
-      '<p class="notitie" style="margin-top:0">Alles staat lokaal in deze browser. Geen account, geen cloud, geen bankkoppeling. ' +
-      'Wis je je browsergegevens, dan is het weg &mdash; exporteer af en toe.</p>' +
+      '<p class="notitie" style="margin-top:0">' + (root.GEDEELDE_OPSLAG
+        ? 'Je gegevens staan in deze link zelf, plus een kopie op dit toestel. Open je de link op je telefoon, ' +
+          'dan zie je wat je op je laptop invulde &mdash; en andersom. De nieuwste van de twee wint. ' +
+          'Geen account, geen bankkoppeling.'
+        : 'Alles staat lokaal in deze browser. Geen account, geen cloud, geen bankkoppeling. ' +
+          'Wis je je browsergegevens, dan is het weg &mdash; exporteer af en toe.') + '</p>' +
       '<div class="knoppen">' +
       '<button class="knop" data-actie="export">Exporteren (JSON)</button>' +
       '<button class="knop zacht" data-actie="import">Importeren</button>' +

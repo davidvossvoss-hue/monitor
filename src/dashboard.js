@@ -98,7 +98,7 @@
     }
 
     var tempo = M.maandTempo(r.besteedbaar, r.uitgaven, new Date());
-    var kleur = tempo.opSchema ? 'var(--groen)' : 'var(--rood)';
+    var kleur = tempo.opSchema ? 'var(--goed)' : 'var(--fout)';
 
     h += '<div class="kaart maandkaart">';
 
@@ -164,41 +164,41 @@
       M.getal(instellingen.jaarruimteDoelPerJaar) > 0;
 
     var h = '<section class="blok"><h2 class="kop">Potjes</h2><div class="rooster k3">';
-    h += potKaart('Oorlogskas', a.standen.oorlogskas, a.oorlogskasDoel, 'var(--groen)',
+    h += potKaart('Oorlogskas', a.standen.oorlogskas, a.oorlogskasDoel, 'var(--goed)',
       a.oorlogskasDoelIsSchatting ? 'doel = plan' : M.getal(instellingen.oorlogskasMaanden) + ' mnd burn');
-    h += potKaart('Autopot', a.standen.autopot, posNu.volgende ? M.getal(posNu.volgende.vanaf) : 0, 'var(--blauw)',
+    h += potKaart('Autopot', a.standen.autopot, posNu.volgende ? M.getal(posNu.volgende.vanaf) : 0, 'var(--koel)',
       posNu.volgende ? 'op weg naar trede ' + (posNu.index + 2) : 'top bereikt');
-    h += potKaart('Beleggen', a.standen.beleggen, 0, 'var(--paars)', 'geen doel, alleen tijd');
+    h += potKaart('Beleggen', a.standen.beleggen, 0, 'var(--koel)', 'geen doel, alleen tijd');
     h += potKaart('Besteedbaar (buffer)', a.standen.besteedbaar, 0, 'var(--tekst)', 'wat je overhield');
     if (jaarruimteAan) {
       h += potKaart('Jaarruimte', a.standen.jaarruimte, M.getal(instellingen.jaarruimteDoelPerJaar),
-        'var(--geel)', 'dit jaar');
+        'var(--amber)', 'dit jaar');
     }
-    h += potKaart('Gereserveerd', a.standen.reserveringen, 0, 'var(--geel)',
+    h += potKaart('Gereserveerd', a.standen.reserveringen, 0, 'var(--amber)',
       a.openReserveringen.length + ' open');
-    h += potKaart('Voorgeschoten', a.standen.voorgeschoten, 0, 'var(--tekst-zacht)',
+    h += potKaart('Voorgeschoten', a.standen.voorgeschoten, 0, 'var(--zacht)',
       a.openVoorschotten.length + ' open');
     h += '</div>';
 
     if (a.openReserveringen.length) {
       h += '<div class="kaart" style="margin-top:1rem"><h3>Wat staat er gereserveerd</h3>' +
-        '<table class="lijst"><tr><th>Waarvoor</th><th>Verwacht</th><th class="r">Bedrag</th></tr>';
+        '<div class="tabel-scroll"><table class="lijst"><tr><th>Waarvoor</th><th>Verwacht</th><th class="r">Bedrag</th></tr>';
       a.openReserveringen.slice().sort(function (x, y) {
         return (x.verwachteMaand || '') < (y.verwachteMaand || '') ? -1 : 1;
       }).forEach(function (r) {
         h += '<tr><td>' + U.esc(r.naam) + '</td><td class="zacht">' + U.esc(U.maandLabel(r.verwachteMaand)) +
           '</td><td class="r">' + U.euro(r.bedrag) + '</td></tr>';
       });
-      h += '</table></div>';
+      h += '</table></div></div>';
     }
     if (a.openVoorschotten.length) {
       h += '<div class="kaart" style="margin-top:1rem"><h3>Nog terug te krijgen</h3>' +
-        '<table class="lijst"><tr><th>Wat</th><th>Voorgeschoten in</th><th class="r">Bedrag</th></tr>';
+        '<div class="tabel-scroll"><table class="lijst"><tr><th>Wat</th><th>Voorgeschoten in</th><th class="r">Bedrag</th></tr>';
       a.openVoorschotten.forEach(function (v) {
         h += '<tr><td>' + U.esc(v.naam) + '</td><td class="zacht">' + U.esc(U.maandLabel(v.maand)) +
           '</td><td class="r">' + U.euro(v.bedrag) + '</td></tr>';
       });
-      h += '</table></div>';
+      h += '</table></div></div>';
     }
     return h + '</section>';
   }
@@ -224,26 +224,27 @@
     var eindStreng = streng[streng.length - 1].waarde;
 
     var xLabels = [];
-    for (var j = 0; j <= jaren; j += Math.max(1, Math.round(jaren / 5))) {
+    var stapJaren = Math.max(1, Math.round(jaren / ((window.innerWidth || 1000) < 700 ? 3 : 5)));
+    for (var j = 0; j <= jaren; j += stapJaren) {
       xLabels.push({ x: j, tekst: j === 0 ? 'nu' : j + ' jr' });
     }
 
     var reeksen = [
-      { punten: streng.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#3ddc97', naam: 'strenger', streep: true },
-      { punten: basis.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#6aa9ff', naam: 'dit tempo', vlak: true }
+      { punten: streng.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#f5a524', naam: 'strenger', streep: true },
+      { punten: basis.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#5ea8e0', naam: 'dit tempo', vlak: true }
     ];
 
     var h = '<section class="blok"><h2 class="kop">Vermogen over ' + jaren + ' jaar</h2><div class="kaart">';
     h += '<div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1.2rem">' +
-      '<div><div class="label">Dit tempo</div><div class="groot" style="color:var(--blauw)">' + U.euro(eindBasis) + '</div>' +
+      '<div><div class="label">Dit tempo</div><div class="groot" style="color:var(--koel)">' + U.euro(eindBasis) + '</div>' +
       '<div class="zachter" style="font-size:.85rem">' + U.euro(inleg) + ' p/m gemeten</div></div>' +
-      '<div><div class="label">Strenger</div><div class="groot" style="color:var(--groen)">' + U.euro(eindStreng) + '</div>' +
+      '<div><div class="label">Strenger</div><div class="groot" style="color:var(--amber)">' + U.euro(eindStreng) + '</div>' +
       '<div class="zachter" style="font-size:.85rem">+ ' + U.euro(extra) + ' p/m</div></div>' +
       '<div><div class="label">Verschil</div><div class="groot">' + U.euro(eindStreng - eindBasis) + '</div>' +
       '<div class="zachter" style="font-size:.85rem">dat is wat discipline oplevert</div></div></div>';
     h += U.lijnGrafiek(reeksen, { hoogte: 300, xLabels: xLabels, titel: 'vermogensprojectie' });
-    h += '<div class="legenda"><span><i style="background:#6aa9ff"></i>dit tempo</span>' +
-      '<span><i style="background:#3ddc97"></i>' + U.euro(extra) + ' p/m strenger</span>' +
+    h += '<div class="legenda"><span><i style="background:#5ea8e0"></i>dit tempo</span>' +
+      '<span><i style="background:#f5a524"></i>' + U.euro(extra) + ' p/m strenger</span>' +
       '<span class="zachter">' + U.pct(rendement) + ' rendement, samengesteld per maand</span></div>';
 
     h += '<div class="grote-regel">Elke &euro; 100 die je nu niet uitgeeft, is over 10 jaar <b>' +
@@ -285,10 +286,10 @@
   function historieBlok(a) {
     if (!a.heeftData) return '';
     var h = '<section class="blok"><h2 class="kop">Ingevulde maanden</h2><div class="kaart">' +
-      '<table class="lijst"><tr><th>Maand</th><th class="r">Salaris</th><th class="r">Besteedbaar</th>' +
+      '<div class="tabel-scroll"><table class="lijst"><tr><th>Maand</th><th class="r">Salaris</th><th class="r">Besteedbaar</th>' +
       '<th class="r">Uitgegeven</th><th class="r">Autopot</th><th class="r">Beleggen</th><th class="r">Burn</th></tr>';
     a.maanden.slice().reverse().forEach(function (r) {
-      var kleur = r.overschrijding > 0 ? 'var(--rood)' : 'var(--groen)';
+      var kleur = r.overschrijding > 0 ? 'var(--fout)' : 'var(--goed)';
       h += '<tr><td>' + U.esc(U.maandLabel(r.maand)) +
         (r.notitie ? '<div class="zachter" style="font-size:.82rem">' + U.esc(r.notitie) + '</div>' : '') + '</td>' +
         '<td class="r">' + U.euro(r.salaris) + '</td>' +
@@ -298,7 +299,7 @@
         '<td class="r">' + U.euro(r.netto.beleggen) + '</td>' +
         '<td class="r zacht">' + U.euro(r.burn) + '</td></tr>';
     });
-    h += '</table></div></section>';
+    h += '</table></div></div></section>';
     return h;
   }
 

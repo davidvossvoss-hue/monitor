@@ -84,7 +84,7 @@
     if (idx >= 0) h += '<button class="knop gevaar mini" data-actie="maand-weg" style="margin-left:auto">Maand verwijderen</button>';
     h += '</div></div>';
 
-    h += '<div class="rooster" style="grid-template-columns:minmax(320px,1.2fr) minmax(280px,1fr)">';
+    h += '<div class="rooster k-invoer">';
 
     // ---- linkerkolom: invoer
     h += '<div class="kaart"><h3>' + U.esc(U.maandLabel(sleutel)) + '</h3>';
@@ -127,7 +127,7 @@
     h += '<section class="blok"><h2 class="kop">Reserveringen</h2><div class="kaart">' +
       '<p class="notitie" style="margin-top:0">Geld dat binnen is maar al vergeven. Het gaat er v&oacute;&oacute;r de ' +
       'surplusberekening af, en op de maand dat je het betaalt telt het niet n&oacute;g een keer als uitgave.</p>' +
-      '<div class="rij" style="grid-template-columns:1fr 120px 130px 130px 42px">' +
+      '<div class="rij rij-res">' +
       '<input type="text" id="res-naam" placeholder="Waarvoor?">' +
       '<input type="number" step="0.01" id="res-bedrag" placeholder="Bedrag">' +
       '<input type="month" id="res-inleg" value="' + U.esc(sleutel) + '" title="inleg in deze maand">' +
@@ -138,7 +138,7 @@
     if (!state.reserveringen.length) {
       h += '<div class="zacht">Nog niets gereserveerd.</div>';
     } else {
-      h += '<table class="lijst"><tr><th>Waarvoor</th><th>Inleg</th><th>Verwacht</th><th class="r">Bedrag</th><th></th><th></th></tr>';
+      h += '<div class="tabel-scroll"><table class="lijst"><tr><th>Waarvoor</th><th>Inleg</th><th>Verwacht</th><th class="r">Bedrag</th><th></th><th></th></tr>';
       state.reserveringen.slice().sort(function (a, b) { return (a.verwachteMaand || '') < (b.verwachteMaand || '') ? -1 : 1; })
         .forEach(function (r) {
           h += '<tr><td>' + U.esc(r.naam) + ' ' +
@@ -152,14 +152,14 @@
               : '<button class="knop zacht mini" data-actie="reservering-afvinken" data-id="' + r.id + '">afvinken in ' + U.esc(U.maandKort(sleutel)) + '</button>') + '</td>' +
             '<td class="r"><button class="weg" data-actie="reservering-weg" data-id="' + r.id + '">&times;</button></td></tr>';
         });
-      h += '</table>';
+      h += '</table></div>';
     }
     h += '</div></section>';
 
     // ---- voorgeschoten
     h += '<section class="blok"><h2 class="kop">Voorgeschoten</h2><div class="kaart">' +
       '<p class="notitie" style="margin-top:0">Geld dat je voorschiet en terugkrijgt. Telt voor nul mee in je budget.</p>' +
-      '<div class="rij" style="grid-template-columns:1fr 120px 130px 42px">' +
+      '<div class="rij rij-vs">' +
       '<input type="text" id="vs-naam" placeholder="Werkdeclaratie, uitje met mijn broer...">' +
       '<input type="number" step="0.01" id="vs-bedrag" placeholder="Bedrag">' +
       '<input type="month" id="vs-maand" value="' + U.esc(sleutel) + '">' +
@@ -167,7 +167,7 @@
     if (!state.voorschotten.length) {
       h += '<div class="zacht">Niets openstaand.</div>';
     } else {
-      h += '<table class="lijst"><tr><th>Wat</th><th>Maand</th><th class="r">Bedrag</th><th></th><th></th></tr>';
+      h += '<div class="tabel-scroll"><table class="lijst"><tr><th>Wat</th><th>Maand</th><th class="r">Bedrag</th><th></th><th></th></tr>';
       state.voorschotten.slice().reverse().forEach(function (v) {
         h += '<tr><td>' + U.esc(v.naam) + ' ' +
           (v.terugbetaaldMaand ? '<span class="chip klaar">terug</span>' : '<span class="chip open">open</span>') + '</td>' +
@@ -178,7 +178,7 @@
             : '<button class="knop zacht mini" data-actie="voorschot-terug" data-id="' + v.id + '">terugbetaald</button>') + '</td>' +
           '<td class="r"><button class="weg" data-actie="voorschot-weg" data-id="' + v.id + '">&times;</button></td></tr>';
       });
-      h += '</table>';
+      h += '</table></div>';
     }
     h += '</div></section></div>';
     return h;

@@ -65,8 +65,12 @@
   // ---------------------------------------------------------------------
   function lijnGrafiek(reeksen, opties) {
     opties = opties || {};
-    var B = 820, H = opties.hoogte || 300;
-    var mL = 58, mR = 14, mT = 14, mB = 30;
+    // Op een telefoon een smaller assenstelsel, anders worden de labels
+    // mee-geschaald tot ze onleesbaar zijn.
+    var smal = (root.innerWidth || 1000) < 700;
+    var B = smal ? 420 : 820, H = opties.hoogte || (smal ? 260 : 300);
+    var tekstgrootte = smal ? 13 : 11;
+    var mL = smal ? 52 : 58, mR = 14, mT = 14, mB = smal ? 26 : 30;
     var alle = reeksen.reduce(function (a, r) { return a.concat(r.punten); }, []);
     if (!alle.length) return '';
     var xMin = Math.min.apply(null, alle.map(function (p) { return p.x; }));
@@ -85,19 +89,19 @@
       esc(opties.titel || 'grafiek') + '">';
 
     // rasterlijnen
-    var lijnen = 4;
+    var lijnen = smal ? 3 : 4;
     for (var i = 0; i <= lijnen; i++) {
       var w = yMin + (yMax - yMin) * i / lijnen;
       var y = sy(w);
       s += '<line x1="' + mL + '" y1="' + y.toFixed(1) + '" x2="' + (B - mR) + '" y2="' + y.toFixed(1) +
-        '" stroke="#262c3a" stroke-width="1"/>';
-      s += '<text x="' + (mL - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#626b7d">' +
+        '" stroke="#24323e" stroke-width="1"/>';
+      s += '<text x="' + (mL - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="' + tekstgrootte + '" fill="#6e8291">' +
         esc(euroKort(w)) + '</text>';
     }
     // x-labels
     var xLabels = opties.xLabels || [];
     xLabels.forEach(function (l) {
-      s += '<text x="' + sx(l.x).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#626b7d">' +
+      s += '<text x="' + sx(l.x).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="' + tekstgrootte + '" fill="#6e8291">' +
         esc(l.tekst) + '</text>';
     });
 

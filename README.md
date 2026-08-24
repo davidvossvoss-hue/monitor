@@ -6,6 +6,19 @@ Alles staat in `localStorage`; exporteer af en toe een JSON-back-up via Instelli
 **Openen:** dubbelklik `index.html`. Dat is alles — geen build, geen dependencies.
 (Wil je het via een servertje: `npm start`.)
 
+**Op je telefoon, via een vast linkje:**
+<https://claude.ai/code/artifact/519e9ff8-8883-4f50-b633-b1f9bd69facf>
+
+Die pagina is dezelfde app, in één bestand, en schrijft zichzelf weg: elke
+wijziging gaat direct naar het toestel waar je op zit, en zodra je even niets
+doet ook naar de link zelf. Open je hem later op een ander toestel, dan wordt
+de nieuwste van die twee gebruikt. Het lampje onderin toont wat er gebeurt;
+tik erop om meteen op te slaan.
+
+Bouwen na een wijziging in `src/`: `npm run bouw` schrijft
+`dist/salaris-monitor.html`. Publiceer dat bestand naar dezelfde link, dan
+blijft de repo de enige bron van waarheid.
+
 **Rekenmodel controleren:** `npm test` (of `node src/model.test.js`) rekent drie
 voorbeeldmaanden door en print elke stap plus de controles.
 
@@ -115,6 +128,8 @@ gemeten over je ingevulde maanden, nooit een aanname over je gedrag.
 
 ```
 index.html            de app
+build/bouw.js         bouwt src/ tot één bestand voor de gedeelde link
+dist/salaris-monitor.html  het gebouwde bestand (niet met de hand bewerken)
 src/model.js          het rekenmodel — puur, zonder DOM, los testbaar
 src/model.test.js     drie voorbeeldmaanden + controles (npm test)
 src/store.js          localStorage
@@ -123,5 +138,6 @@ src/dashboard.js      scherm A
 src/invoer.js         scherm B
 src/instellingen.js   scherm C
 src/app.js            routing, databinding, acties
+src/artifact-opslag.js alleen in de gedeelde versie: schrijft de pagina weg
 src/styles.css        vormgeving
 ```

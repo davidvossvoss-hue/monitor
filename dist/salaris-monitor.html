@@ -1,0 +1,2027 @@
+<title>Salaris Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style id="stijl">
+/* Salaris Monitor — instrumentenpaneel bij nacht.
+   Blauwzwarte grond, ivoren cijfers, amber als naald. Groen en rood zijn
+   uitsluitend signaalkleuren: op schema of eroverheen. */
+
+:root {
+  --grond: #0a0f14;
+  --vlak: #111a22;
+  --vlak-2: #17222c;
+  --vlak-3: #1e2b36;
+  --lijn: #24323e;
+  --lijn-fel: #33454f;
+
+  --tekst: #e9f1f5;
+  --zacht: #93a3b0;
+  --zachter: #6e8291;
+
+  --amber: #f5a524;
+  --amber-dof: rgba(245, 165, 36, .12);
+  --goed: #35c48b;
+  --goed-dof: rgba(53, 196, 139, .12);
+  --fout: #f2555a;
+  --fout-dof: rgba(242, 85, 90, .12);
+  --koel: #5ea8e0;
+
+  --r: 14px;
+  --r-s: 9px;
+
+  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --ui: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 0 5rem;
+  background: var(--grond);
+  color: var(--tekst);
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+
+/* ------------------------------------------------------------------ layout */
+.wrap { max-width: 1060px; margin: 0 auto; padding: 0 1.25rem; }
+
+header.top {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(10, 15, 20, .92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--lijn);
+}
+.top-in {
+  max-width: 1060px; margin: 0 auto; padding: .8rem 1.25rem;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.merk {
+  font-family: var(--display); font-weight: 700; font-size: 1.02rem;
+  letter-spacing: -.02em;
+}
+.merk span { color: var(--zachter); font-weight: 500; font-family: var(--ui); letter-spacing: 0; }
+
+nav.tabs { display: flex; gap: .3rem; margin-left: auto; }
+nav.tabs button {
+  background: transparent; border: 1px solid transparent; color: var(--zacht);
+  padding: .5rem .9rem; border-radius: 999px; font-size: .92rem; cursor: pointer;
+  font-family: inherit; font-weight: 600;
+}
+nav.tabs button:hover { color: var(--tekst); background: var(--vlak-2); }
+nav.tabs button.actief { background: var(--tekst); color: var(--grond); }
+
+section.blok { margin: 2rem 0; }
+h2.kop {
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .16em;
+  color: var(--zachter); margin: 0 0 .8rem; font-weight: 700;
+}
+h3 { font-size: 1rem; margin: 0 0 .7rem; font-weight: 650; letter-spacing: -.01em; }
+
+.kaart { background: var(--vlak); border: 1px solid var(--lijn); border-radius: var(--r); padding: 1.25rem; }
+.rooster { display: grid; gap: .9rem; }
+.k2 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.k3 { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.k-invoer { grid-template-columns: minmax(320px, 1.15fr) minmax(280px, 1fr); }
+
+/* ---------------------------------------------------------------- getallen */
+.mega, .groot, .middel, .num, table.lijst td.r, table.lijst th.r, input {
+  font-variant-numeric: tabular-nums;
+}
+.mega {
+  font-family: var(--display); font-size: clamp(2.5rem, 9vw, 4.2rem);
+  font-weight: 800; letter-spacing: -.045em; line-height: .96;
+}
+.groot {
+  font-family: var(--display); font-size: clamp(1.65rem, 4.5vw, 2.3rem);
+  font-weight: 700; letter-spacing: -.035em; line-height: 1.05;
+}
+.middel { font-family: var(--display); font-size: 1.3rem; font-weight: 650; letter-spacing: -.02em; }
+.label {
+  font-size: .72rem; color: var(--zacht); text-transform: uppercase;
+  letter-spacing: .13em; font-weight: 650;
+}
+.zacht { color: var(--zacht); }
+.zachter { color: var(--zachter); }
+.groen { color: var(--goed); }
+.rood { color: var(--fout); }
+.geel { color: var(--amber); }
+
+/* ------------------------------------------------------------ auto-ladder */
+.hero {
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgba(245,165,36,.10) 0%, rgba(245,165,36,0) 55%),
+    linear-gradient(168deg, #16222c 0%, #0f1720 65%);
+  border: 1px solid var(--lijn-fel); border-radius: 20px; padding: 1.7rem;
+}
+.hero-boven { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.trede-naam {
+  font-family: var(--display); font-size: clamp(1.75rem, 6vw, 3rem); font-weight: 800;
+  letter-spacing: -.04em; line-height: 1.02; margin: .3rem 0 0; text-wrap: balance;
+  color: var(--amber);
+}
+.regel-werk { margin-top: 1.1rem; font-size: clamp(1.02rem, 2.3vw, 1.25rem); font-weight: 600; }
+.regel-werk b { color: var(--amber); font-family: var(--display); letter-spacing: -.02em; }
+
+/* meterbalken */
+.balk { height: 8px; border-radius: 999px; background: var(--vlak-3); overflow: hidden; }
+.balk > i { display: block; height: 100%; border-radius: 999px; background: var(--amber); transition: width .35s ease; }
+.balk-uiteinden { display: flex; justify-content: space-between; gap: 1rem; font-size: .78rem; color: var(--zachter); margin-top: .45rem; }
+
+.ladder { margin-top: 1.5rem; display: grid; gap: .25rem; }
+.trede {
+  display: grid; grid-template-columns: 1.4rem 1fr auto; align-items: center; gap: .7rem;
+  padding: .45rem .65rem; border-radius: var(--r-s); font-size: .92rem;
+  color: var(--zachter); border: 1px solid transparent;
+}
+.trede .nr { font-size: .74rem; text-align: center; font-variant-numeric: tabular-nums; }
+.trede.bereikt { color: var(--zacht); }
+.trede.bereikt .nr { color: var(--goed); }
+.trede.nu { background: var(--amber-dof); border-color: rgba(245,165,36,.4); color: var(--tekst); font-weight: 650; }
+.trede.nu .nr { color: var(--amber); }
+.trede.volgend { background: var(--vlak-2); border-color: var(--lijn); color: var(--tekst); }
+
+/* -------------------------------------------------------------- deze maand */
+.maandkaart { display: grid; gap: 1.3rem; grid-template-columns: minmax(250px, 1.05fr) minmax(250px, 1fr); }
+
+.tempo-balk { position: relative; height: 12px; border-radius: 999px; background: var(--vlak-3); margin-top: 1rem; }
+.tempo-balk > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; }
+.tempo-balk > .marker { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--tekst); border-radius: 2px; }
+.tempo-legenda { display: flex; justify-content: space-between; font-size: .78rem; color: var(--zachter); margin-top: .45rem; }
+
+.statuslijn { padding: .75rem .95rem; border-radius: var(--r-s); font-weight: 650; font-size: 1rem; }
+.statuslijn.ok { background: var(--goed-dof); color: var(--goed); }
+.statuslijn.niet { background: var(--fout-dof); color: var(--fout); }
+
+/* ------------------------------------------------------------------ potjes */
+.pot { background: var(--vlak); border: 1px solid var(--lijn); border-radius: var(--r); padding: 1rem 1.1rem; }
+.pot .naam { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.pot .bedrag { margin: .4rem 0 .7rem; }
+.pot .doel { font-size: .8rem; color: var(--zachter); margin-top: .45rem; }
+
+/* ------------------------------------------------------------------ lijsten */
+.tabel-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.lijst { width: 100%; border-collapse: collapse; font-size: .93rem; }
+table.lijst th {
+  text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--zachter); font-weight: 700; padding: .5rem .55rem; border-bottom: 1px solid var(--lijn);
+  white-space: nowrap;
+}
+table.lijst td { padding: .6rem .55rem; border-bottom: 1px solid var(--lijn); vertical-align: middle; }
+table.lijst tr:last-child td { border-bottom: none; }
+table.lijst td.r, table.lijst th.r { text-align: right; }
+
+/* --------------------------------------------------------------- formulier */
+label.veld { display: block; margin-bottom: .95rem; }
+label.veld > span.t { display: block; font-size: .8rem; color: var(--zacht); margin-bottom: .35rem; font-weight: 600; }
+label.veld > span.u { display: block; font-size: .78rem; color: var(--zachter); margin-top: .35rem; line-height: 1.45; }
+.veld > span.t { display: block; font-size: .8rem; color: var(--zacht); margin-bottom: .35rem; font-weight: 600; }
+.veld > span.u { display: block; font-size: .78rem; color: var(--zachter); margin-top: .35rem; line-height: 1.45; }
+
+input, select, textarea {
+  width: 100%; background: var(--grond); border: 1px solid var(--lijn); color: var(--tekst);
+  border-radius: var(--r-s); padding: .62rem .7rem; font-size: 16px; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--amber); outline-offset: -1px; border-color: transparent; }
+input[type=checkbox] { width: auto; }
+textarea { min-height: 68px; resize: vertical; line-height: 1.45; }
+
+.knop {
+  background: var(--tekst); color: var(--grond); border: none; border-radius: var(--r-s);
+  padding: .65rem 1.05rem; font-size: .94rem; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.knop.zacht { background: var(--vlak-2); color: var(--tekst); border: 1px solid var(--lijn); }
+.knop.mini { padding: .38rem .65rem; font-size: .82rem; }
+.knop.gevaar { background: transparent; color: var(--fout); border: 1px solid rgba(242,85,90,.35); }
+.knop:hover { opacity: .87; }
+.knoppen { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+
+.rij { display: grid; grid-template-columns: 1fr 140px 40px; gap: .5rem; margin-bottom: .5rem; align-items: center; }
+.rij-res { grid-template-columns: 1fr 110px 128px 128px 40px; }
+.rij-vs { grid-template-columns: 1fr 110px 128px 40px; }
+.rij .weg {
+  background: transparent; border: 1px solid var(--lijn); color: var(--zachter);
+  border-radius: var(--r-s); height: 40px; cursor: pointer; font-size: 1.05rem; line-height: 1; padding: 0;
+}
+.rij .weg:hover { color: var(--fout); border-color: rgba(242,85,90,.4); }
+
+.notitie { font-size: .88rem; color: var(--zacht); line-height: 1.55; }
+.leeg {
+  border: 1px dashed var(--lijn-fel); border-radius: var(--r); padding: 1.4rem;
+  color: var(--zacht); font-size: .98rem; line-height: 1.6;
+}
+.chip {
+  display: inline-block; padding: .15rem .5rem; border-radius: 999px; font-size: .7rem;
+  font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+}
+.chip.open { background: var(--amber-dof); color: var(--amber); }
+.chip.klaar { background: var(--goed-dof); color: var(--goed); }
+
+.mijlpaal {
+  display: grid; grid-template-columns: 1fr auto auto; gap: .9rem;
+  padding: .65rem .1rem; border-bottom: 1px solid var(--lijn); align-items: baseline;
+}
+.mijlpaal:last-child { border-bottom: none; }
+.mijlpaal .wanneer { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+svg.grafiek { width: 100%; height: auto; display: block; }
+.legenda { display: flex; gap: 1.1rem; flex-wrap: wrap; font-size: .84rem; margin-top: .8rem; color: var(--zacht); }
+.legenda i { display: inline-block; width: 20px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; }
+
+.grote-regel {
+  margin-top: 1.1rem; padding: .95rem 1.1rem; border-radius: var(--r-s);
+  background: var(--vlak-2); font-size: 1rem; line-height: 1.5; border: 1px solid var(--lijn);
+}
+.grote-regel b { color: var(--amber); font-family: var(--display); letter-spacing: -.02em; }
+
+/* -------------------------------------------------------- opslag-indicator */
+.opslag {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: 1rem; z-index: 40;
+  background: var(--vlak-2); border: 1px solid var(--lijn-fel); color: var(--zacht);
+  padding: .5rem .9rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
+  display: flex; align-items: center; gap: .5rem; box-shadow: 0 6px 24px rgba(0,0,0,.45);
+  opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+.opslag.zichtbaar { opacity: 1; }
+.opslag i { width: 7px; height: 7px; border-radius: 50%; background: var(--zachter); }
+.opslag.bezig i { background: var(--amber); }
+.opslag.klaar i { background: var(--goed); }
+.opslag.mis i { background: var(--fout); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ------------------------------------------------------------------ mobiel */
+@media (max-width: 760px) {
+  .wrap { padding: 0 .9rem; }
+  .top-in { padding: .7rem .9rem; gap: .6rem; }
+  .merk span { display: none; }
+  nav.tabs { width: 100%; margin-left: 0; }
+  nav.tabs button { flex: 1; padding: .55rem .4rem; font-size: .88rem; }
+  section.blok { margin: 1.4rem 0; }
+  .hero { padding: 1.2rem; border-radius: 16px; }
+  .hero-boven { display: block; }
+  .hero-boven > div:last-child { text-align: left !important; margin-top: 1rem;
+    display: flex; gap: 1.2rem; align-items: baseline; flex-wrap: wrap; }
+  .ladder { margin-top: 1.2rem; }
+  .maandkaart, .k-invoer { grid-template-columns: 1fr; }
+  .kaart { padding: 1rem; }
+  .rij { grid-template-columns: 1fr 96px 40px; }
+  .pot { padding: .85rem .9rem; }
+  .pot .naam { display: block; }
+  .pot .naam > span:last-child { display: block; margin-top: .15rem; }
+  .rij-res, .rij-vs { grid-template-columns: 1fr 1fr; }
+  .rij-res > :last-child, .rij-vs > :last-child { grid-column: 1 / -1; }
+  .mijlpaal { grid-template-columns: 1fr auto; row-gap: .2rem; }
+  .mijlpaal .wanneer { grid-column: 1 / -1; font-size: .88rem; }
+  table.lijst { font-size: .88rem; }
+}
+
+</style>
+<header class="top">
+  <div class="top-in">
+    <div class="merk">Salaris Monitor <span>&mdash; jouw tempo, doorgetrokken</span></div>
+    <nav class="tabs">
+      <button data-actie="tab" data-tab="dashboard" class="actief">Dashboard</button>
+      <button data-actie="tab" data-tab="invoer">Invoer</button>
+      <button data-actie="tab" data-tab="instellingen">Instellingen</button>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+<div class="opslag" id="opslag" title="Tik om nu op te slaan"><i></i><span>opgeslagen</span></div>
+<script id="staat" type="application/json">{}</script>
+<script id="code">
+/* Salaris Monitor — alles in één bestand. Bron: github.com/davidvossvoss-hue/monitor */
+
+/* ============================================================================
+   Salaris Monitor — rekenmodel
+   Puur rekenwerk. Geen DOM, geen opslag, geen aannames over gedrag.
+   Draait in de browser (window.Model) en in node (module.exports).
+   ========================================================================= */
+(function (root) {
+  'use strict';
+
+  // --------------------------------------------------------------------------
+  // Standaardinstellingen. Alles hier is aanpasbaar in het instellingenscherm.
+  // --------------------------------------------------------------------------
+  var STANDAARD_INSTELLINGEN = {
+    // Vaste lasten wonen & eten lopen via de gezamenlijke pas.
+    // Van het totaal dat daar afgaat is dit mijn deel:
+    gezamenlijkePasMijnDeelPct: 50,
+    // Gepland maandbedrag naar de gezamenlijke pas. Alleen gebruikt zolang er
+    // nog geen maand is ingevuld — daarna rekent alles met gemeten cijfers.
+    gezamenlijkePasPlan: 1800,
+
+    // Vaste lasten overig: vrije lijst.
+    vasteLastenOverig: [
+      { naam: 'AI-abonnementen', bedrag: 60 },
+      { naam: 'Telefoon', bedrag: 25 },
+      { naam: 'Tanken', bedrag: 150 },
+      { naam: 'Verzekeringen', bedrag: 165 }
+    ],
+
+    // Verdeling van het surplus.
+    surplusInvesterenPct: 70,
+
+    // Binnen het investeringsdeel, na de oorlogskas:
+    autopotPctNaOorlogskas: 60,
+
+    // Oorlogskas: doel = maanden x totale burn rate (incl. gezamenlijke pas
+    // en dagelijkse uitgaven). Handmatig doel overschrijft de berekening.
+    oorlogskasMaanden: 6,
+    oorlogskasDoelHandmatig: null,
+
+    // Jaarruimte: deel van de beleggingsinleg dat je apart zet voor je
+    // jaarruimte. 0 = uit.
+    jaarruimteDeelVanBeleggenPct: 0,
+    jaarruimteDoelPerJaar: 0,
+
+    // Projectie.
+    rendementPct: 7,
+    strengerExtraPerMaand: 250,
+    projectieJaren: 20,
+
+    // Financiële vrijheid = gewenst maandinkomen x 12 / opnamepercentage.
+    gewenstMaandinkomen: 3000,
+    opnamePct: 4,
+
+    // Weekbedrag = maandbedrag / dit getal.
+    wekenPerMaand: 4.33,
+
+    // Beginstanden van de potjes (wat er al stond voordat je begon te loggen).
+    startSaldi: {
+      oorlogskas: 0,
+      autopot: 0,
+      beleggen: 0,
+      jaarruimte: 0,
+      besteedbaar: 0
+    },
+
+    autoLadder: [
+      { naam: 'Huidige auto houden', vanaf: 1500 },
+      { naam: 'Honda Civic 2011', vanaf: 6000 },
+      { naam: 'Lexus CT 200h', vanaf: 14000 },
+      { naam: 'Hyundai Tucson 2020', vanaf: 19000 },
+      { naam: 'Volkswagen Tiguan 2020', vanaf: 29000 },
+      { naam: 'Porsche Cayman', vanaf: 35000 },
+      { naam: 'Lexus RX450h', vanaf: 49000 },
+      { naam: 'Volvo XC90', vanaf: 60000 },
+      { naam: 'Land Rover Defender 2024', vanaf: 90000 }
+    ]
+  };
+
+  // --------------------------------------------------------------------------
+  // Hulpjes
+  // --------------------------------------------------------------------------
+  function getal(x) {
+    var n = typeof x === 'string' ? parseFloat(x.replace(',', '.')) : x;
+    return typeof n === 'number' && isFinite(n) ? n : 0;
+  }
+
+  function som(lijst, veld) {
+    return (lijst || []).reduce(function (t, r) {
+      return t + getal(veld ? r[veld] : r);
+    }, 0);
+  }
+
+  function maandSleutel(datum) {
+    var d = datum ? new Date(datum) : new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function maandPlus(sleutel, n) {
+    var p = String(sleutel).split('-');
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1 + n, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function maandenPerJaar() { return 12; }
+
+  function vasteLastenOverigTotaal(instellingen) {
+    return som(instellingen.vasteLastenOverig, 'bedrag');
+  }
+
+  function eigenUitgavenTotaal(maand) {
+    if (!maand) return 0;
+    if (Array.isArray(maand.eigenUitgaven)) return som(maand.eigenUitgaven, 'bedrag');
+    return getal(maand.eigenUitgaven);
+  }
+
+  // --------------------------------------------------------------------------
+  // Burn rate: wat mijn leven per maand kost.
+  // Gezamenlijke pas (mijn deel) + vaste lasten overig + wat ik echt uitgeef.
+  // Reserveringen en voorgeschoten geld tellen NIET mee: dat is geen verbruik.
+  // --------------------------------------------------------------------------
+  function burnVanMaand(maand, instellingen, reserveringen, voorschotten) {
+    var mijnDeel = getal(maand.gezamenlijkePasTotaal) *
+      getal(instellingen.gezamenlijkePasMijnDeelPct) / 100;
+    return mijnDeel +
+      vasteLastenOverigTotaal(instellingen) +
+      effectieveUitgaven(maand, reserveringen, voorschotten);
+  }
+
+  // Wat er echt uit mijn besteedbare geld ging.
+  // Eraf: voorgeschoten geld (krijg ik terug) en betalingen die al gereserveerd
+  // waren (die zijn eerder al van het salaris af gegaan).
+  function effectieveUitgaven(maand, reserveringen, voorschotten) {
+    var bruto = eigenUitgavenTotaal(maand);
+    var voorgeschoten = som((voorschotten || []).filter(function (v) {
+      return v.maand === maand.maand;
+    }), 'bedrag');
+    var gereserveerdBetaald = som((reserveringen || []).filter(function (r) {
+      return r.betaaldMaand === maand.maand;
+    }), 'bedrag');
+    return bruto - voorgeschoten - gereserveerdBetaald;
+  }
+
+  // --------------------------------------------------------------------------
+  // Oorlogskasdoel
+  // --------------------------------------------------------------------------
+  function oorlogskasDoel(instellingen, gemiddeldeBurn) {
+    if (instellingen.oorlogskasDoelHandmatig != null &&
+        getal(instellingen.oorlogskasDoelHandmatig) > 0) {
+      return { bedrag: getal(instellingen.oorlogskasDoelHandmatig), schatting: false };
+    }
+    if (gemiddeldeBurn != null) {
+      return {
+        bedrag: getal(instellingen.oorlogskasMaanden) * gemiddeldeBurn,
+        schatting: false
+      };
+    }
+    // Nog geen maand ingevuld: dan is dit een plan, geen meting.
+    var planBurn = getal(instellingen.gezamenlijkePasPlan) +
+      vasteLastenOverigTotaal(instellingen);
+    return {
+      bedrag: getal(instellingen.oorlogskasMaanden) * planBurn,
+      schatting: true
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // Eén maand doorrekenen, gegeven de stand van de potjes aan het begin.
+  // --------------------------------------------------------------------------
+  function berekenMaand(maand, instellingen, stand, doelOorlogskas, reserveringen, voorschotten) {
+    var i = instellingen;
+
+    var salaris = getal(maand.salaris);
+    var gezamenlijkTotaal = getal(maand.gezamenlijkePasTotaal);
+    var mijnDeelGezamenlijk = gezamenlijkTotaal * getal(i.gezamenlijkePasMijnDeelPct) / 100;
+    var vasteOverig = vasteLastenOverigTotaal(i);
+
+    var reserveringInleg = som((reserveringen || []).filter(function (r) {
+      return r.inlegMaand === maand.maand;
+    }), 'bedrag');
+    var reserveringVrijgevallen = som((reserveringen || []).filter(function (r) {
+      return r.betaaldMaand === maand.maand;
+    }), 'bedrag');
+
+    // ---- Volgorde van verdeling -------------------------------------------
+    var surplus = salaris - mijnDeelGezamenlijk - vasteOverig - reserveringInleg;
+
+    var investeren = surplus > 0 ? surplus * getal(i.surplusInvesterenPct) / 100 : 0;
+    var besteedbaar = surplus - investeren; // bij negatief surplus: negatief
+
+    // ---- Investeringsdeel in strikte volgorde ------------------------------
+    var tekortOorlogskas = Math.max(0, doelOorlogskas - stand.oorlogskas);
+    var naarOorlogskas = Math.min(investeren, tekortOorlogskas);
+    var naOorlogskas = investeren - naarOorlogskas;
+    var naarAutopot = naOorlogskas * getal(i.autopotPctNaOorlogskas) / 100;
+    var naarBeleggenBruto = naOorlogskas - naarAutopot;
+    var naarJaarruimte = naarBeleggenBruto * getal(i.jaarruimteDeelVanBeleggenPct) / 100;
+    var naarBeleggen = naarBeleggenBruto - naarJaarruimte;
+
+    // ---- Uitgaven ----------------------------------------------------------
+    var uitgavenBruto = eigenUitgavenTotaal(maand);
+    var voorgeschoten = som((voorschotten || []).filter(function (v) {
+      return v.maand === maand.maand;
+    }), 'bedrag');
+    var uitgaven = uitgavenBruto - voorgeschoten - reserveringVrijgevallen;
+
+    var overschrijding = Math.max(0, uitgaven - besteedbaar);
+    var onderschrijding = Math.max(0, besteedbaar - uitgaven);
+
+    // Te veel uitgegeven? Dat komt ergens vandaan. Eerst uit wat er in het
+    // besteedbaar-potje over was van eerdere maanden, daarna uit de autopot,
+    // daarna beleggen, daarna de oorlogskas.
+    var rest = overschrijding;
+    var uitBuffer = Math.min(rest, Math.max(0, stand.besteedbaar)); rest -= uitBuffer;
+    var uitAutopot = Math.min(rest, naarAutopot); rest -= uitAutopot;
+    var uitJaarruimte = Math.min(rest, naarJaarruimte); rest -= uitJaarruimte;
+    var uitBeleggen = Math.min(rest, naarBeleggen); rest -= uitBeleggen;
+    var uitOorlogskas = Math.min(rest, naarOorlogskas + Math.max(0, stand.oorlogskas)); rest -= uitOorlogskas;
+    var ongedekt = rest;
+
+    var nettoOorlogskas = naarOorlogskas - uitOorlogskas;
+    var nettoAutopot = naarAutopot - uitAutopot;
+    var nettoBeleggen = naarBeleggen - uitBeleggen;
+    var nettoJaarruimte = naarJaarruimte - uitJaarruimte;
+    var nettoBesteedbaar = onderschrijding - uitBuffer;
+
+    var nieuweStand = {
+      oorlogskas: stand.oorlogskas + nettoOorlogskas,
+      autopot: stand.autopot + nettoAutopot,
+      beleggen: stand.beleggen + nettoBeleggen,
+      jaarruimte: stand.jaarruimte + nettoJaarruimte,
+      besteedbaar: stand.besteedbaar + nettoBesteedbaar,
+      reserveringen: stand.reserveringen + reserveringInleg - reserveringVrijgevallen
+    };
+
+    return {
+      maand: maand.maand,
+      salaris: salaris,
+      gezamenlijkePasTotaal: gezamenlijkTotaal,
+      mijnDeelGezamenlijk: mijnDeelGezamenlijk,
+      vasteLastenOverig: vasteOverig,
+      reserveringInleg: reserveringInleg,
+      reserveringVrijgevallen: reserveringVrijgevallen,
+      surplus: surplus,
+      investeren: investeren,
+      besteedbaar: besteedbaar,
+      weekbedrag: besteedbaar / getal(i.wekenPerMaand),
+
+      naarOorlogskas: naarOorlogskas,
+      naarAutopot: naarAutopot,
+      naarBeleggen: naarBeleggen,
+      naarJaarruimte: naarJaarruimte,
+
+      uitgavenBruto: uitgavenBruto,
+      voorgeschoten: voorgeschoten,
+      uitgaven: uitgaven,
+      overschrijding: overschrijding,
+      onderschrijding: onderschrijding,
+      dekking: {
+        buffer: uitBuffer,
+        autopot: uitAutopot,
+        jaarruimte: uitJaarruimte,
+        beleggen: uitBeleggen,
+        oorlogskas: uitOorlogskas,
+        ongedekt: ongedekt
+      },
+
+      netto: {
+        oorlogskas: nettoOorlogskas,
+        autopot: nettoAutopot,
+        beleggen: nettoBeleggen,
+        jaarruimte: nettoJaarruimte,
+        besteedbaar: nettoBesteedbaar
+      },
+
+      burn: mijnDeelGezamenlijk + vasteOverig + uitgaven,
+      standNa: nieuweStand,
+      notitie: maand.notitie || ''
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // Alle maanden achter elkaar. De oorlogskas loopt vol, dus de volgorde telt.
+  // --------------------------------------------------------------------------
+  function berekenAlles(data) {
+    var instellingen = Object.assign({}, STANDAARD_INSTELLINGEN, data.instellingen || {});
+    var reserveringen = data.reserveringen || [];
+    var voorschotten = data.voorschotten || [];
+
+    var maanden = (data.maanden || []).slice().sort(function (a, b) {
+      return a.maand < b.maand ? -1 : a.maand > b.maand ? 1 : 0;
+    });
+    var ingevuld = maanden.filter(function (m) { return getal(m.salaris) > 0; });
+
+    // Pas 1: burn rate meten (hangt niet af van de verdeling).
+    var burns = ingevuld.map(function (m) {
+      return burnVanMaand(m, instellingen, reserveringen, voorschotten);
+    });
+    var gemiddeldeBurn = burns.length
+      ? burns.reduce(function (a, b) { return a + b; }, 0) / burns.length
+      : null;
+
+    var doel = oorlogskasDoel(instellingen, gemiddeldeBurn);
+
+    // Pas 2: maand voor maand verdelen.
+    var start = Object.assign({
+      oorlogskas: 0, autopot: 0, beleggen: 0, jaarruimte: 0, besteedbaar: 0
+    }, instellingen.startSaldi || {});
+    var stand = {
+      oorlogskas: getal(start.oorlogskas),
+      autopot: getal(start.autopot),
+      beleggen: getal(start.beleggen),
+      jaarruimte: getal(start.jaarruimte),
+      besteedbaar: getal(start.besteedbaar),
+      reserveringen: 0
+    };
+
+    var resultaten = ingevuld.map(function (m) {
+      var r = berekenMaand(m, instellingen, stand, doel.bedrag, reserveringen, voorschotten);
+      stand = r.standNa;
+      return r;
+    });
+
+    // Gemeten gemiddelden — nooit een aanname.
+    function gem(veld) {
+      if (!resultaten.length) return null;
+      return resultaten.reduce(function (t, r) { return t + r.netto[veld]; }, 0) / resultaten.length;
+    }
+
+    var gemiddelden = resultaten.length ? {
+      oorlogskas: gem('oorlogskas'),
+      autopot: gem('autopot'),
+      beleggen: gem('beleggen'),
+      jaarruimte: gem('jaarruimte'),
+      besteedbaar: gem('besteedbaar'),
+      belegdTotaal: gem('beleggen') + gem('jaarruimte'),
+      burn: gemiddeldeBurn,
+      salaris: resultaten.reduce(function (t, r) { return t + r.salaris; }, 0) / resultaten.length,
+      uitgaven: resultaten.reduce(function (t, r) { return t + r.uitgaven; }, 0) / resultaten.length,
+      besteedbaarRuimte: resultaten.reduce(function (t, r) { return t + r.besteedbaar; }, 0) / resultaten.length
+    } : null;
+
+    // Openstaande posten.
+    var openReserveringen = reserveringen.filter(function (r) { return !r.betaaldMaand; });
+    var openVoorschotten = voorschotten.filter(function (v) { return !v.terugbetaaldMaand; });
+
+    return {
+      instellingen: instellingen,
+      maanden: resultaten,
+      laatste: resultaten.length ? resultaten[resultaten.length - 1] : null,
+      standen: {
+        oorlogskas: stand.oorlogskas,
+        autopot: stand.autopot,
+        beleggen: stand.beleggen,
+        jaarruimte: stand.jaarruimte,
+        besteedbaar: stand.besteedbaar,
+        reserveringen: som(openReserveringen, 'bedrag'),
+        voorgeschoten: som(openVoorschotten, 'bedrag')
+      },
+      oorlogskasDoel: doel.bedrag,
+      oorlogskasDoelIsSchatting: doel.schatting,
+      gemiddeldeBurn: gemiddeldeBurn,
+      gemiddelden: gemiddelden,
+      openReserveringen: openReserveringen,
+      openVoorschotten: openVoorschotten,
+      heeftData: resultaten.length > 0
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // Auto-ladder
+  // --------------------------------------------------------------------------
+  function ladderPositie(bedrag, ladder) {
+    var tredes = (ladder || []).slice().sort(function (a, b) {
+      return getal(a.vanaf) - getal(b.vanaf);
+    });
+    var huidige = null, index = -1;
+    for (var k = 0; k < tredes.length; k++) {
+      if (bedrag >= getal(tredes[k].vanaf)) { huidige = tredes[k]; index = k; }
+    }
+    var volgende = index + 1 < tredes.length ? tredes[index + 1] : null;
+    var onder = huidige ? getal(huidige.vanaf) : 0;
+    var boven = volgende ? getal(volgende.vanaf) : null;
+    var voortgang = boven != null && boven > onder
+      ? Math.max(0, Math.min(1, (bedrag - onder) / (boven - onder)))
+      : 1;
+    return {
+      bedrag: bedrag,
+      huidige: huidige,
+      index: index,
+      volgende: volgende,
+      tekort: volgende ? getal(volgende.vanaf) - bedrag : 0,
+      voortgang: voortgang,
+      tredes: tredes
+    };
+  }
+
+  // Waar staat de autopot over n maanden, op basis van het gemeten tempo?
+  function autopotOverMaanden(analyse, maanden) {
+    if (!analyse.gemiddelden) return null;
+    return analyse.standen.autopot + analyse.gemiddelden.autopot * maanden;
+  }
+
+  // --------------------------------------------------------------------------
+  // Projectie
+  // --------------------------------------------------------------------------
+  function projecteer(startBedrag, inlegPerMaand, rendementPct, jaren) {
+    var r = Math.pow(1 + getal(rendementPct) / 100, 1 / 12) - 1;
+    var saldo = getal(startBedrag);
+    var punten = [{ maand: 0, jaar: 0, waarde: saldo, ingelegd: getal(startBedrag) }];
+    var ingelegd = getal(startBedrag);
+    var totaal = Math.round(getal(jaren) * 12);
+    for (var m = 1; m <= totaal; m++) {
+      saldo = saldo * (1 + r) + getal(inlegPerMaand);
+      ingelegd += getal(inlegPerMaand);
+      punten.push({ maand: m, jaar: m / 12, waarde: saldo, ingelegd: ingelegd });
+    }
+    return punten;
+  }
+
+  function maandenTot(startBedrag, inlegPerMaand, rendementPct, doel, maxMaanden) {
+    var r = Math.pow(1 + getal(rendementPct) / 100, 1 / 12) - 1;
+    var saldo = getal(startBedrag);
+    var limiet = maxMaanden || 12 * 60;
+    if (saldo >= doel) return 0;
+    if (getal(inlegPerMaand) <= 0 && r <= 0) return null;
+    for (var m = 1; m <= limiet; m++) {
+      saldo = saldo * (1 + r) + getal(inlegPerMaand);
+      if (saldo >= doel) return m;
+    }
+    return null;
+  }
+
+  function datumOverMaanden(n, vanaf) {
+    var d = vanaf ? new Date(vanaf) : new Date();
+    d.setMonth(d.getMonth() + Math.round(n));
+    return d;
+  }
+
+  function vrijheidsBedrag(instellingen) {
+    return getal(instellingen.gewenstMaandinkomen) * 12 / (getal(instellingen.opnamePct) / 100);
+  }
+
+  // "Elke €100 die je nu niet uitgeeft, is over 10 jaar € X waard"
+  function honderdEuroOver(jaren, rendementPct) {
+    return 100 * Math.pow(1 + getal(rendementPct) / 100, getal(jaren));
+  }
+
+  // --------------------------------------------------------------------------
+  // Tempo binnen de lopende maand
+  // --------------------------------------------------------------------------
+  function maandTempo(besteedbaar, uitgegeven, datum) {
+    var d = datum ? new Date(datum) : new Date();
+    var dagenInMaand = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    var dag = d.getDate();
+    var verwacht = besteedbaar * (dag / dagenInMaand);
+    var over = besteedbaar - uitgegeven;
+    var dagenRestend = dagenInMaand - dag;
+    return {
+      dag: dag,
+      dagenInMaand: dagenInMaand,
+      dagenRestend: dagenRestend,
+      verwachtOpSchema: verwacht,
+      uitgegeven: uitgegeven,
+      over: over,
+      verschilMetSchema: verwacht - uitgegeven, // positief = voor op schema
+      opSchema: uitgegeven <= verwacht,
+      perResterendeDag: dagenRestend > 0 ? over / dagenRestend : over,
+      aandeelOp: besteedbaar > 0 ? uitgegeven / besteedbaar : (uitgegeven > 0 ? 1 : 0)
+    };
+  }
+
+  var Model = {
+    STANDAARD_INSTELLINGEN: STANDAARD_INSTELLINGEN,
+    getal: getal,
+    som: som,
+    maandSleutel: maandSleutel,
+    maandPlus: maandPlus,
+    maandenPerJaar: maandenPerJaar,
+    vasteLastenOverigTotaal: vasteLastenOverigTotaal,
+    eigenUitgavenTotaal: eigenUitgavenTotaal,
+    effectieveUitgaven: effectieveUitgaven,
+    burnVanMaand: burnVanMaand,
+    oorlogskasDoel: oorlogskasDoel,
+    berekenMaand: berekenMaand,
+    berekenAlles: berekenAlles,
+    ladderPositie: ladderPositie,
+    autopotOverMaanden: autopotOverMaanden,
+    projecteer: projecteer,
+    maandenTot: maandenTot,
+    datumOverMaanden: datumOverMaanden,
+    vrijheidsBedrag: vrijheidsBedrag,
+    honderdEuroOver: honderdEuroOver,
+    maandTempo: maandTempo
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = Model;
+  root.Model = Model;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+
+/* Opslag. Alles lokaal in de browser. Geen account, geen cloud. */
+(function (root) {
+  'use strict';
+  var SLEUTEL = 'salaris-monitor-v1';
+
+  function leeg() {
+    return {
+      instellingen: JSON.parse(JSON.stringify(root.Model.STANDAARD_INSTELLINGEN)),
+      maanden: [],
+      reserveringen: [],
+      voorschotten: []
+    };
+  }
+
+  function laden() {
+    try {
+      var ruw = localStorage.getItem(SLEUTEL);
+      if (!ruw) return leeg();
+      var d = JSON.parse(ruw);
+      var basis = leeg();
+      d.instellingen = Object.assign({}, basis.instellingen, d.instellingen || {});
+      d.instellingen.startSaldi = Object.assign({}, basis.instellingen.startSaldi, d.instellingen.startSaldi || {});
+      d.maanden = d.maanden || [];
+      d.reserveringen = d.reserveringen || [];
+      d.voorschotten = d.voorschotten || [];
+      return d;
+    } catch (e) {
+      console.warn('Opslag onleesbaar, opnieuw begonnen.', e);
+      return leeg();
+    }
+  }
+
+  function bewaren(data) {
+    try { localStorage.setItem(SLEUTEL, JSON.stringify(data)); }
+    catch (e) { console.warn('Kon niet opslaan.', e); }
+  }
+
+  function wissen() { localStorage.removeItem(SLEUTEL); }
+
+  function id() {
+    return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  root.Store = { laden: laden, bewaren: bewaren, wissen: wissen, leeg: leeg, id: id, SLEUTEL: SLEUTEL };
+})(window);
+
+
+/* Kleine hulpjes voor opmaak, DOM en grafieken. */
+(function (root) {
+  'use strict';
+
+  var nfEuro0 = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  var nfEuro2 = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function euro(n, decimalen) {
+    n = root.Model.getal(n);
+    return (decimalen ? nfEuro2 : nfEuro0).format(n);
+  }
+  function euroKort(n) {
+    n = root.Model.getal(n);
+    var a = Math.abs(n);
+    if (a >= 1000000) return (n / 1000000).toFixed(a >= 10000000 ? 0 : 1).replace('.', ',') + ' mln';
+    if (a >= 1000) return '€ ' + Math.round(n / 1000) + 'k';
+    return euro(n);
+  }
+  function pct(n) { return Math.round(root.Model.getal(n)) + '%'; }
+
+  var MAANDNAMEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli',
+    'augustus', 'september', 'oktober', 'november', 'december'];
+
+  function maandLabel(sleutel) {
+    if (!sleutel) return '—';
+    var p = String(sleutel).split('-');
+    var m = parseInt(p[1], 10) - 1;
+    return (MAANDNAMEN[m] || '?') + ' ' + p[0];
+  }
+  function maandKort(sleutel) {
+    var p = String(sleutel).split('-');
+    var m = parseInt(p[1], 10) - 1;
+    return (MAANDNAMEN[m] || '?').slice(0, 3) + " '" + String(p[0]).slice(2);
+  }
+  function datumLabel(d) {
+    if (!d) return '—';
+    return MAANDNAMEN[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // Waarde op een pad zetten: 'instellingen.autoLadder.2.vanaf'
+  function zetPad(obj, pad, waarde) {
+    var d = pad.split('.'), o = obj;
+    for (var i = 0; i < d.length - 1; i++) o = o[d[i]];
+    o[d[d.length - 1]] = waarde;
+  }
+  function leesPad(obj, pad) {
+    return pad.split('.').reduce(function (o, k) { return o == null ? o : o[k]; }, obj);
+  }
+
+  function balk(deel, kleur) {
+    var p = Math.max(0, Math.min(1, deel || 0)) * 100;
+    return '<div class="balk"><i style="width:' + p.toFixed(1) + '%' +
+      (kleur ? ';background:' + kleur : '') + '"></i></div>';
+  }
+
+  // ---------------------------------------------------------------------
+  // Lijngrafiek in SVG. Geen bibliotheken.
+  // reeksen: [{punten:[{x,y}], kleur, naam, vlak:bool}]
+  // ---------------------------------------------------------------------
+  function lijnGrafiek(reeksen, opties) {
+    opties = opties || {};
+    // Op een telefoon een smaller assenstelsel, anders worden de labels
+    // mee-geschaald tot ze onleesbaar zijn.
+    var smal = (root.innerWidth || 1000) < 700;
+    var B = smal ? 420 : 820, H = opties.hoogte || (smal ? 260 : 300);
+    var tekstgrootte = smal ? 13 : 11;
+    var mL = smal ? 52 : 58, mR = 14, mT = 14, mB = smal ? 26 : 30;
+    var alle = reeksen.reduce(function (a, r) { return a.concat(r.punten); }, []);
+    if (!alle.length) return '';
+    var xMin = Math.min.apply(null, alle.map(function (p) { return p.x; }));
+    var xMax = Math.max.apply(null, alle.map(function (p) { return p.x; }));
+    var yMax = Math.max.apply(null, alle.map(function (p) { return p.y; }));
+    var yMin = Math.min(0, Math.min.apply(null, alle.map(function (p) { return p.y; })));
+    if (yMax === yMin) yMax = yMin + 1;
+    // afgeronde bovengrens
+    var stap = Math.pow(10, Math.floor(Math.log10(yMax || 1)));
+    yMax = Math.ceil(yMax / (stap / 2)) * (stap / 2);
+
+    var sx = function (x) { return mL + (x - xMin) / (xMax - xMin || 1) * (B - mL - mR); };
+    var sy = function (y) { return H - mB - (y - yMin) / (yMax - yMin || 1) * (H - mT - mB); };
+
+    var s = '<svg class="grafiek" viewBox="0 0 ' + B + ' ' + H + '" role="img" aria-label="' +
+      esc(opties.titel || 'grafiek') + '">';
+
+    // rasterlijnen
+    var lijnen = smal ? 3 : 4;
+    for (var i = 0; i <= lijnen; i++) {
+      var w = yMin + (yMax - yMin) * i / lijnen;
+      var y = sy(w);
+      s += '<line x1="' + mL + '" y1="' + y.toFixed(1) + '" x2="' + (B - mR) + '" y2="' + y.toFixed(1) +
+        '" stroke="#24323e" stroke-width="1"/>';
+      s += '<text x="' + (mL - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="' + tekstgrootte + '" fill="#6e8291">' +
+        esc(euroKort(w)) + '</text>';
+    }
+    // x-labels
+    var xLabels = opties.xLabels || [];
+    xLabels.forEach(function (l) {
+      s += '<text x="' + sx(l.x).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="' + tekstgrootte + '" fill="#6e8291">' +
+        esc(l.tekst) + '</text>';
+    });
+
+    reeksen.forEach(function (r, idx) {
+      var d = r.punten.map(function (p, k) {
+        return (k ? 'L' : 'M') + sx(p.x).toFixed(1) + ' ' + sy(p.y).toFixed(1);
+      }).join(' ');
+      if (r.vlak) {
+        s += '<path d="' + d + ' L' + sx(r.punten[r.punten.length - 1].x).toFixed(1) + ' ' + sy(yMin).toFixed(1) +
+          ' L' + sx(r.punten[0].x).toFixed(1) + ' ' + sy(yMin).toFixed(1) + ' Z" fill="' + r.kleur + '" opacity=".08"/>';
+      }
+      s += '<path d="' + d + '" fill="none" stroke="' + r.kleur + '" stroke-width="' + (r.dik || 2.5) +
+        '" stroke-linejoin="round" stroke-linecap="round"' + (r.streep ? ' stroke-dasharray="6 5"' : '') + '/>';
+      var laatste = r.punten[r.punten.length - 1];
+      s += '<circle cx="' + sx(laatste.x).toFixed(1) + '" cy="' + sy(laatste.y).toFixed(1) + '" r="3.5" fill="' + r.kleur + '"/>';
+    });
+
+    s += '</svg>';
+    return s;
+  }
+
+  root.UI = {
+    euro: euro, euroKort: euroKort, pct: pct, esc: esc,
+    maandLabel: maandLabel, maandKort: maandKort, datumLabel: datumLabel,
+    zetPad: zetPad, leesPad: leesPad, balk: balk, lijnGrafiek: lijnGrafiek,
+    MAANDNAMEN: MAANDNAMEN
+  };
+})(window);
+
+
+/* Het dashboard. Grote getallen, weinig tekst, alles gemeten. */
+(function (root) {
+  'use strict';
+  var M = root.Model, U = root.UI;
+
+  function potKaart(naam, bedrag, doel, kleur, extra) {
+    var h = '<div class="pot"><div class="naam"><span class="label">' + U.esc(naam) + '</span>' +
+      (extra ? '<span class="zachter" style="font-size:.8rem">' + extra + '</span>' : '') + '</div>' +
+      '<div class="bedrag groot" style="color:' + kleur + '">' + U.euro(bedrag) + '</div>';
+    if (doel && doel > 0) {
+      var deel = bedrag / doel;
+      h += U.balk(deel, kleur) +
+        '<div class="doel">' + (bedrag >= doel
+          ? 'Doel gehaald &middot; ' + U.euro(doel)
+          : U.esc(Math.round(deel * 100)) + '% van ' + U.euro(doel) + ' &middot; nog ' + U.euro(doel - bedrag)) +
+        '</div>';
+    }
+    return h + '</div>';
+  }
+
+  // ------------------------------------------------------------------ ladder
+  function ladderBlok(a, instellingen) {
+    var heeft = a.heeftData;
+    var over12 = heeft ? M.autopotOverMaanden(a, 12) : null;
+    var pos = M.ladderPositie(heeft ? over12 : -1, instellingen.autoLadder);
+
+    var h = '<section class="blok"><div class="hero">';
+    h += '<div class="hero-boven"><div>' +
+      '<div class="label">Autopot over 12 maanden &middot; op jouw gemeten tempo</div>';
+
+    if (!heeft) {
+      h += '<div class="trede-naam zachter">Nog niets gemeten</div>' +
+        '</div></div>' +
+        '<div class="regel-werk zacht" style="margin-top:1.1rem">Vul bij <b>Invoer</b> je eerste maand in. ' +
+        'Zolang er niets staat reken ik nergens mee &mdash; ik verzin geen voorbeeldcijfers.</div>';
+    } else {
+      h += '<div class="mega">' + U.euro(over12) + '</div>' +
+        '<div class="trede-naam">' + U.esc(pos.huidige ? pos.huidige.naam : 'nog onder de eerste trede') + '</div>' +
+        '</div>' +
+        '<div style="text-align:right"><div class="label">Autopot nu</div>' +
+        '<div class="groot">' + U.euro(a.standen.autopot) + '</div>' +
+        '<div class="zachter" style="font-size:.85rem;margin-top:.3rem">' +
+        U.euro(a.gemiddelden.autopot) + ' per maand gemeten<br>over ' + a.maanden.length +
+        (a.maanden.length === 1 ? ' maand' : ' maanden') + '</div></div></div>';
+
+      if (pos.volgende) {
+        h += '<div class="regel-werk">Nog <b>' + U.euro(pos.tekort) + '</b> en je zit in de ' +
+          U.esc(pos.volgende.naam) + '.</div>';
+        h += '<div style="margin-top:1rem">' + U.balk(pos.voortgang) +
+          '<div class="balk-uiteinden"><span>' + U.esc(pos.huidige ? pos.huidige.naam : 'start') + ' &middot; ' +
+          U.euro(pos.huidige ? pos.huidige.vanaf : 0) + '</span><span>' +
+          U.esc(pos.volgende.naam) + ' &middot; ' + U.euro(pos.volgende.vanaf) + '</span></div></div>';
+        var maandenNodig = a.gemiddelden.autopot > 0
+          ? Math.ceil((M.getal(pos.volgende.vanaf) - a.standen.autopot) / a.gemiddelden.autopot) : null;
+        if (maandenNodig && maandenNodig > 0) {
+          h += '<div class="zacht" style="margin-top:.7rem;font-size:.9rem">Op dit tempo sta je daar in ' +
+            maandenNodig + (maandenNodig === 1 ? ' maand' : ' maanden') + ': ' +
+            U.esc(U.datumLabel(M.datumOverMaanden(maandenNodig))) + '.</div>';
+        }
+      } else {
+        h += '<div class="regel-werk">Bovenste trede. Alles daarboven is een keuze, geen doel meer.</div>';
+      }
+    }
+
+    // de ladder zelf
+    h += '<div class="ladder">';
+    pos.tredes.forEach(function (t, i) {
+      var klas = 'trede';
+      if (heeft) {
+        if (i === pos.index) klas += ' nu';
+        else if (pos.volgende && i === pos.index + 1) klas += ' volgend';
+        else if (i < pos.index) klas += ' bereikt';
+      }
+      h += '<div class="' + klas + '"><span class="nr">' + (i + 1) + '</span>' +
+        '<span>' + U.esc(t.naam) + '</span>' +
+        '<span class="num">' + U.euro(t.vanaf) + '</span></div>';
+    });
+    h += '</div></div></section>';
+    return h;
+  }
+
+  // ------------------------------------------------------- sturing deze maand
+  function maandBlok(a, state) {
+    var nu = M.maandSleutel();
+    var r = null;
+    for (var i = 0; i < a.maanden.length; i++) if (a.maanden[i].maand === nu) r = a.maanden[i];
+
+    var h = '<section class="blok"><h2 class="kop">Deze maand &middot; ' + U.esc(U.maandLabel(nu)) + '</h2>';
+
+    if (!r) {
+      var vorige = a.laatste;
+      h += '<div class="leeg">Deze maand is nog niet ingevuld. Zet je salaris erin bij <b>Invoer</b>, dan weet je ' +
+        'binnen tien seconden wat je te besteden hebt.' +
+        (vorige ? '<br><br><span class="zacht">Vorige ingevulde maand (' + U.esc(U.maandLabel(vorige.maand)) +
+          '): besteedbaar ' + U.euro(vorige.besteedbaar) + ', uitgegeven ' + U.euro(vorige.uitgaven) + '.</span>' : '') +
+        '</div></section>';
+      return h;
+    }
+
+    var tempo = M.maandTempo(r.besteedbaar, r.uitgaven, new Date());
+    var kleur = tempo.opSchema ? 'var(--goed)' : 'var(--fout)';
+
+    h += '<div class="kaart maandkaart">';
+
+    // links: het bedrag
+    h += '<div><div class="label">Dit mag je deze maand uitgeven</div>' +
+      '<div class="mega" style="margin:.3rem 0 .1rem">' + U.euro(r.besteedbaar) + '</div>' +
+      '<div class="middel zacht">' + U.euro(r.weekbedrag) + ' per week</div>';
+    h += '<div class="zachter" style="font-size:.86rem;margin-top:.9rem;line-height:1.5">' +
+      'Surplus ' + U.euro(r.surplus) + ' &middot; ' + U.pct(state.instellingen.surplusInvesterenPct) +
+      ' investeren (' + U.euro(r.investeren) + ') / ' +
+      U.pct(100 - M.getal(state.instellingen.surplusInvesterenPct)) + ' besteedbaar.</div>';
+    h += '</div>';
+
+    // rechts: hoe het loopt
+    h += '<div>';
+    h += '<div style="display:flex;justify-content:space-between;gap:1rem">' +
+      '<div><div class="label">Al op</div><div class="groot">' + U.euro(r.uitgaven) + '</div></div>' +
+      '<div style="text-align:right"><div class="label">Nog over</div><div class="groot" style="color:' + kleur + '">' +
+      U.euro(r.besteedbaar - r.uitgaven) + '</div></div></div>';
+
+    var deel = Math.max(0, Math.min(1, tempo.aandeelOp));
+    var schema = r.besteedbaar > 0 ? Math.max(0, Math.min(1, tempo.verwachtOpSchema / r.besteedbaar)) : 0;
+    h += '<div class="tempo-balk"><i style="width:' + (deel * 100).toFixed(1) + '%;background:' + kleur + '"></i>' +
+      '<span class="marker" style="left:' + (schema * 100).toFixed(1) + '%"></span></div>';
+    h += '<div class="tempo-legenda"><span>dag ' + tempo.dag + ' van ' + tempo.dagenInMaand + '</span>' +
+      '<span>streepje = op schema</span></div>';
+
+    if (r.overschrijding > 0) {
+      h += '<div class="statuslijn niet" style="margin-top:1rem">' + U.euro(r.overschrijding, true) +
+        ' over je maandbedrag heen.</div>';
+      var d = r.dekking, delen = [];
+      if (d.buffer) delen.push('uit je buffer ' + U.euro(d.buffer));
+      if (d.autopot) delen.push('<span class="rood">kost je autopot ' + U.euro(d.autopot) + '</span>');
+      if (d.jaarruimte) delen.push('kost je jaarruimte ' + U.euro(d.jaarruimte));
+      if (d.beleggen) delen.push('kost je beleggen ' + U.euro(d.beleggen));
+      if (d.oorlogskas) delen.push('kost je oorlogskas ' + U.euro(d.oorlogskas));
+      if (d.ongedekt) delen.push('ongedekt ' + U.euro(d.ongedekt));
+      h += '<div class="zacht" style="margin-top:.6rem;font-size:.92rem">' + delen.join(' &middot; ') + '</div>';
+      if (d.autopot > 0) {
+        var wkn = a.gemiddelden && a.gemiddelden.autopot > 0 ? d.autopot / a.gemiddelden.autopot : null;
+        if (wkn) h += '<div class="zachter" style="margin-top:.35rem;font-size:.88rem">Dat is ' +
+          (wkn < 1 ? Math.round(wkn * 30) + ' dagen' : (Math.round(wkn * 10) / 10).toString().replace('.', ',') + ' maand') +
+          ' autopot-tempo.</div>';
+      }
+    } else {
+      h += '<div class="statuslijn ' + (tempo.opSchema ? 'ok' : 'niet') + '" style="margin-top:1rem">' +
+        (tempo.opSchema
+          ? U.euro(Math.abs(tempo.verschilMetSchema)) + ' voor op schema'
+          : U.euro(Math.abs(tempo.verschilMetSchema)) + ' achter op schema') + '</div>';
+      h += '<div class="zacht" style="margin-top:.6rem;font-size:.92rem">' +
+        (tempo.dagenRestend > 0
+          ? U.euro(tempo.perResterendeDag) + ' per dag voor de resterende ' + tempo.dagenRestend + ' dagen.'
+          : 'Laatste dag van de maand.') + '</div>';
+    }
+    h += '</div></div></section>';
+    return h;
+  }
+
+  // ------------------------------------------------------------------- potjes
+  function potjesBlok(a, instellingen) {
+    var posNu = M.ladderPositie(a.standen.autopot, instellingen.autoLadder);
+    var jaarruimteAan = M.getal(instellingen.jaarruimteDeelVanBeleggenPct) > 0 ||
+      M.getal(instellingen.jaarruimteDoelPerJaar) > 0;
+
+    var h = '<section class="blok"><h2 class="kop">Potjes</h2><div class="rooster k3">';
+    h += potKaart('Oorlogskas', a.standen.oorlogskas, a.oorlogskasDoel, 'var(--goed)',
+      a.oorlogskasDoelIsSchatting ? 'doel = plan' : M.getal(instellingen.oorlogskasMaanden) + ' mnd burn');
+    h += potKaart('Autopot', a.standen.autopot, posNu.volgende ? M.getal(posNu.volgende.vanaf) : 0, 'var(--koel)',
+      posNu.volgende ? 'op weg naar trede ' + (posNu.index + 2) : 'top bereikt');
+    h += potKaart('Beleggen', a.standen.beleggen, 0, 'var(--koel)', 'geen doel, alleen tijd');
+    h += potKaart('Besteedbaar (buffer)', a.standen.besteedbaar, 0, 'var(--tekst)', 'wat je overhield');
+    if (jaarruimteAan) {
+      h += potKaart('Jaarruimte', a.standen.jaarruimte, M.getal(instellingen.jaarruimteDoelPerJaar),
+        'var(--amber)', 'dit jaar');
+    }
+    h += potKaart('Gereserveerd', a.standen.reserveringen, 0, 'var(--amber)',
+      a.openReserveringen.length + ' open');
+    h += potKaart('Voorgeschoten', a.standen.voorgeschoten, 0, 'var(--zacht)',
+      a.openVoorschotten.length + ' open');
+    h += '</div>';
+
+    if (a.openReserveringen.length) {
+      h += '<div class="kaart" style="margin-top:1rem"><h3>Wat staat er gereserveerd</h3>' +
+        '<div class="tabel-scroll"><table class="lijst"><tr><th>Waarvoor</th><th>Verwacht</th><th class="r">Bedrag</th></tr>';
+      a.openReserveringen.slice().sort(function (x, y) {
+        return (x.verwachteMaand || '') < (y.verwachteMaand || '') ? -1 : 1;
+      }).forEach(function (r) {
+        h += '<tr><td>' + U.esc(r.naam) + '</td><td class="zacht">' + U.esc(U.maandLabel(r.verwachteMaand)) +
+          '</td><td class="r">' + U.euro(r.bedrag) + '</td></tr>';
+      });
+      h += '</table></div></div>';
+    }
+    if (a.openVoorschotten.length) {
+      h += '<div class="kaart" style="margin-top:1rem"><h3>Nog terug te krijgen</h3>' +
+        '<div class="tabel-scroll"><table class="lijst"><tr><th>Wat</th><th>Voorgeschoten in</th><th class="r">Bedrag</th></tr>';
+      a.openVoorschotten.forEach(function (v) {
+        h += '<tr><td>' + U.esc(v.naam) + '</td><td class="zacht">' + U.esc(U.maandLabel(v.maand)) +
+          '</td><td class="r">' + U.euro(v.bedrag) + '</td></tr>';
+      });
+      h += '</table></div></div>';
+    }
+    return h + '</section>';
+  }
+
+  // ---------------------------------------------------------------- projectie
+  function projectieBlok(a, instellingen) {
+    if (!a.heeftData) {
+      return '<section class="blok"><h2 class="kop">Vermogen over ' +
+        M.getal(instellingen.projectieJaren) + ' jaar</h2>' +
+        '<div class="leeg">Zodra er &eacute;&eacute;n maand ingevuld staat teken ik hier je lijn. ' +
+        'Niet eerder &mdash; een grafiek op basis van een aanname is een leugen met assen.</div></section>';
+    }
+
+    var jaren = M.getal(instellingen.projectieJaren) || 20;
+    var rendement = M.getal(instellingen.rendementPct);
+    var extra = M.getal(instellingen.strengerExtraPerMaand);
+    var start = a.standen.beleggen + a.standen.jaarruimte;
+    var inleg = a.gemiddelden.belegdTotaal;
+
+    var basis = M.projecteer(start, inleg, rendement, jaren);
+    var streng = M.projecteer(start, inleg + extra, rendement, jaren);
+    var eindBasis = basis[basis.length - 1].waarde;
+    var eindStreng = streng[streng.length - 1].waarde;
+
+    var xLabels = [];
+    var stapJaren = Math.max(1, Math.round(jaren / ((window.innerWidth || 1000) < 700 ? 3 : 5)));
+    for (var j = 0; j <= jaren; j += stapJaren) {
+      xLabels.push({ x: j, tekst: j === 0 ? 'nu' : j + ' jr' });
+    }
+
+    var reeksen = [
+      { punten: streng.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#f5a524', naam: 'strenger', streep: true },
+      { punten: basis.map(function (p) { return { x: p.jaar, y: p.waarde }; }), kleur: '#5ea8e0', naam: 'dit tempo', vlak: true }
+    ];
+
+    var h = '<section class="blok"><h2 class="kop">Vermogen over ' + jaren + ' jaar</h2><div class="kaart">';
+    h += '<div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1.2rem">' +
+      '<div><div class="label">Dit tempo</div><div class="groot" style="color:var(--koel)">' + U.euro(eindBasis) + '</div>' +
+      '<div class="zachter" style="font-size:.85rem">' + U.euro(inleg) + ' p/m gemeten</div></div>' +
+      '<div><div class="label">Strenger</div><div class="groot" style="color:var(--amber)">' + U.euro(eindStreng) + '</div>' +
+      '<div class="zachter" style="font-size:.85rem">+ ' + U.euro(extra) + ' p/m</div></div>' +
+      '<div><div class="label">Verschil</div><div class="groot">' + U.euro(eindStreng - eindBasis) + '</div>' +
+      '<div class="zachter" style="font-size:.85rem">dat is wat discipline oplevert</div></div></div>';
+    h += U.lijnGrafiek(reeksen, { hoogte: 300, xLabels: xLabels, titel: 'vermogensprojectie' });
+    h += '<div class="legenda"><span><i style="background:#5ea8e0"></i>dit tempo</span>' +
+      '<span><i style="background:#f5a524"></i>' + U.euro(extra) + ' p/m strenger</span>' +
+      '<span class="zachter">' + U.pct(rendement) + ' rendement, samengesteld per maand</span></div>';
+
+    h += '<div class="grote-regel">Elke &euro; 100 die je nu niet uitgeeft, is over 10 jaar <b>' +
+      U.euro(M.honderdEuroOver(10, rendement), true) + '</b> waard.</div>';
+    h += '</div>';
+
+    // ---- mijlpalen
+    var vrijheid = M.vrijheidsBedrag(instellingen);
+    var punten = [
+      { naam: 'Oorlogskas vol', doel: a.oorlogskasDoel, start: a.standen.oorlogskas, inleg: a.gemiddelden.oorlogskas, rend: 0 },
+      { naam: 'Eerste € 50.000 belegd', doel: 50000, start: start, inleg: inleg, rend: rendement },
+      { naam: '€ 100.000', doel: 100000, start: start, inleg: inleg, rend: rendement },
+      { naam: '€ 250.000', doel: 250000, start: start, inleg: inleg, rend: rendement },
+      { naam: '€ 500.000', doel: 500000, start: start, inleg: inleg, rend: rendement },
+      {
+        naam: 'Financiële vrijheid', doel: vrijheid, start: start, inleg: inleg, rend: rendement,
+        toelichting: U.euro(instellingen.gewenstMaandinkomen) + ' p/m bij ' + U.pct(instellingen.opnamePct) + ' opname'
+      }
+    ];
+
+    h += '<div class="kaart" style="margin-top:1rem"><h3>Mijlpalen</h3>';
+    punten.forEach(function (p) {
+      var m = M.maandenTot(p.start, p.inleg, p.rend, p.doel, 12 * 70);
+      var wanneer;
+      if (m === 0) wanneer = '<span class="groen">gehaald</span>';
+      else if (m == null) wanneer = '<span class="zachter">niet op dit tempo</span>';
+      else wanneer = U.esc(U.datumLabel(M.datumOverMaanden(m))) +
+        ' <span class="zachter" style="font-weight:400">(' +
+        (m < 24 ? m + ' mnd' : (Math.round(m / 1.2) / 10).toString().replace('.', ',') + ' jaar') + ')</span>';
+      h += '<div class="mijlpaal"><span>' + U.esc(p.naam) +
+        (p.toelichting ? ' <span class="zachter" style="font-size:.84rem">&middot; ' + p.toelichting + '</span>' : '') +
+        '</span><span class="zacht num">' + U.euro(p.doel) + '</span><span class="wanneer">' + wanneer + '</span></div>';
+    });
+    h += '</div></section>';
+    return h;
+  }
+
+  // ------------------------------------------------------------- maandhistorie
+  function historieBlok(a) {
+    if (!a.heeftData) return '';
+    var h = '<section class="blok"><h2 class="kop">Ingevulde maanden</h2><div class="kaart">' +
+      '<div class="tabel-scroll"><table class="lijst"><tr><th>Maand</th><th class="r">Salaris</th><th class="r">Besteedbaar</th>' +
+      '<th class="r">Uitgegeven</th><th class="r">Autopot</th><th class="r">Beleggen</th><th class="r">Burn</th></tr>';
+    a.maanden.slice().reverse().forEach(function (r) {
+      var kleur = r.overschrijding > 0 ? 'var(--fout)' : 'var(--goed)';
+      h += '<tr><td>' + U.esc(U.maandLabel(r.maand)) +
+        (r.notitie ? '<div class="zachter" style="font-size:.82rem">' + U.esc(r.notitie) + '</div>' : '') + '</td>' +
+        '<td class="r">' + U.euro(r.salaris) + '</td>' +
+        '<td class="r">' + U.euro(r.besteedbaar) + '</td>' +
+        '<td class="r" style="color:' + kleur + '">' + U.euro(r.uitgaven) + '</td>' +
+        '<td class="r">' + U.euro(r.netto.autopot) + '</td>' +
+        '<td class="r">' + U.euro(r.netto.beleggen) + '</td>' +
+        '<td class="r zacht">' + U.euro(r.burn) + '</td></tr>';
+    });
+    h += '</table></div></div></section>';
+    return h;
+  }
+
+  function render(state) {
+    var a = M.berekenAlles(state);
+    return '<div class="wrap">' +
+      ladderBlok(a, a.instellingen) +
+      maandBlok(a, state) +
+      potjesBlok(a, a.instellingen) +
+      projectieBlok(a, a.instellingen) +
+      historieBlok(a) +
+      '</div>';
+  }
+
+  root.Dashboard = { render: render };
+})(window);
+
+
+/* Invoerscherm. Vier getallen per maand, meer niet. */
+(function (root) {
+  'use strict';
+  var M = root.Model, U = root.UI;
+
+  function maandIndex(state, sleutel) {
+    for (var i = 0; i < state.maanden.length; i++) if (state.maanden[i].maand === sleutel) return i;
+    return -1;
+  }
+
+  function zorgVoorMaand(state, sleutel) {
+    var i = maandIndex(state, sleutel);
+    if (i >= 0) return i;
+    state.maanden.push({
+      maand: sleutel, salaris: 0, gezamenlijkePasTotaal: M.getal(state.instellingen.gezamenlijkePasPlan) * 2,
+      eigenUitgaven: [{ omschrijving: 'Revolut', bedrag: 0 }, { omschrijving: 'ABN AMRO', bedrag: 0 }, { omschrijving: 'Amex', bedrag: 0 }],
+      notitie: ''
+    });
+    state.maanden.sort(function (a, b) { return a.maand < b.maand ? -1 : 1; });
+    return maandIndex(state, sleutel);
+  }
+
+  // ------------------------------------------------------------- live uitkomst
+  function liveHTML(state, sleutel) {
+    var a = M.berekenAlles(state);
+    var r = null;
+    for (var i = 0; i < a.maanden.length; i++) if (a.maanden[i].maand === sleutel) r = a.maanden[i];
+    if (!r) {
+      return '<div class="leeg">Vul een salaris in, dan reken ik deze maand meteen door.</div>';
+    }
+    function rij(label, bedrag, klas, teken) {
+      if (Object.is(bedrag, -0)) bedrag = 0; // geen "-€ 0,00"
+      return '<tr class="' + (klas || '') + '"><td>' + label + '</td><td class="r">' +
+        (teken || '') + U.euro(bedrag, true) + '</td></tr>';
+    }
+    var h = '<table class="lijst">';
+    h += rij('Salaris', r.salaris);
+    h += rij('Gezamenlijke pas &mdash; mijn deel (' + U.pct(state.instellingen.gezamenlijkePasMijnDeelPct) + ')', -r.mijnDeelGezamenlijk || 0, 'zacht');
+    h += rij('Vaste lasten overig', -r.vasteLastenOverig || 0, 'zacht');
+    h += rij('Inleg reserveringen deze maand', -r.reserveringInleg || 0, 'zacht');
+    h += '<tr><td><b>Surplus</b></td><td class="r"><b>' + U.euro(r.surplus, true) + '</b></td></tr>';
+    h += rij('&rarr; investeren (' + U.pct(state.instellingen.surplusInvesterenPct) + ')', r.investeren);
+    h += rij('&nbsp;&nbsp;&nbsp;1. oorlogskas', r.naarOorlogskas, 'zacht');
+    h += rij('&nbsp;&nbsp;&nbsp;2. autopot', r.naarAutopot, 'zacht');
+    h += rij('&nbsp;&nbsp;&nbsp;3. beleggen', r.naarBeleggen, 'zacht');
+    if (r.naarJaarruimte) h += rij('&nbsp;&nbsp;&nbsp;3b. jaarruimte', r.naarJaarruimte, 'zacht');
+    h += '<tr><td><b>&rarr; besteedbaar</b></td><td class="r"><b>' + U.euro(r.besteedbaar, true) + '</b></td></tr>';
+    h += rij('Eigen uitgaven ingevoerd', r.uitgavenBruto, 'zacht');
+    if (r.voorgeschoten) h += rij('af: voorgeschoten', -r.voorgeschoten, 'zacht');
+    if (r.reserveringVrijgevallen) h += rij('af: gereserveerd, valt vrij', -r.reserveringVrijgevallen, 'zacht');
+    h += '<tr><td><b>Telt mee als uitgave</b></td><td class="r"><b>' + U.euro(r.uitgaven, true) + '</b></td></tr>';
+    h += '</table>';
+
+    if (r.overschrijding > 0) {
+      h += '<div class="statuslijn niet" style="margin-top:1rem">' + U.euro(r.overschrijding, true) + ' eroverheen' +
+        (r.dekking.autopot ? ' &middot; kost je ' + U.euro(r.dekking.autopot, true) + ' autopot' : '') + '</div>';
+    } else {
+      h += '<div class="statuslijn ok" style="margin-top:1rem">' + U.euro(r.onderschrijding, true) + ' over</div>';
+    }
+    h += '<div class="zachter" style="font-size:.85rem;margin-top:.8rem">Burn rate deze maand ' +
+      U.euro(r.burn) + ' &middot; weekbedrag ' + U.euro(r.weekbedrag) + '</div>';
+    return h;
+  }
+
+  // ---------------------------------------------------------------- het scherm
+  function render(state, sleutel) {
+    var idx = maandIndex(state, sleutel);
+    var m = idx >= 0 ? state.maanden[idx] : null;
+    var p = 'maanden.' + idx + '.';
+
+    var h = '<div class="wrap"><section class="blok">';
+
+    // maandkiezer
+    h += '<div class="kaart" style="margin-bottom:1rem"><div class="knoppen">' +
+      '<span class="label" style="margin-right:.4rem">Maand</span><select data-actie="kies-maand" style="width:auto;min-width:180px">';
+    var sleutels = state.maanden.map(function (x) { return x.maand; });
+    if (sleutels.indexOf(sleutel) < 0) sleutels.push(sleutel);
+    sleutels.sort().reverse().forEach(function (s) {
+      h += '<option value="' + U.esc(s) + '"' + (s === sleutel ? ' selected' : '') + '>' + U.esc(U.maandLabel(s)) + '</option>';
+    });
+    h += '</select>';
+    h += '<input type="month" id="nieuwe-maand-veld" value="' + U.esc(sleutel) + '" style="width:auto">' +
+      '<button class="knop zacht" data-actie="nieuwe-maand">Naar deze maand</button>';
+    if (idx >= 0) h += '<button class="knop gevaar mini" data-actie="maand-weg" style="margin-left:auto">Maand verwijderen</button>';
+    h += '</div></div>';
+
+    h += '<div class="rooster k-invoer">';
+
+    // ---- linkerkolom: invoer
+    h += '<div class="kaart"><h3>' + U.esc(U.maandLabel(sleutel)) + '</h3>';
+
+    if (idx < 0) {
+      h += '<div class="leeg" style="margin-bottom:1rem">Deze maand bestaat nog niet. ' +
+        '<button class="knop mini" data-actie="maand-aanmaken" data-maand="' + U.esc(sleutel) + '">Maand aanmaken</button></div>';
+    } else {
+      h += '<label class="veld"><span class="t">Salaris</span>' +
+        '<input type="number" step="0.01" data-bind="' + p + 'salaris" value="' + M.getal(m.salaris) + '"></label>';
+
+      var mijnDeel = M.getal(m.gezamenlijkePasTotaal) * M.getal(state.instellingen.gezamenlijkePasMijnDeelPct) / 100;
+      h += '<label class="veld"><span class="t">Gezamenlijke pas &mdash; totaal deze maand</span>' +
+        '<input type="number" step="0.01" data-bind="' + p + 'gezamenlijkePasTotaal" value="' + M.getal(m.gezamenlijkePasTotaal) + '">' +
+        '<span class="u">Mijn deel (' + U.pct(state.instellingen.gezamenlijkePasMijnDeelPct) + '): ' +
+        U.euro(mijnDeel, true) + ' &middot; dit is je vaste last wonen &amp; eten.</span></label>';
+
+      h += '<div class="veld"><span class="t">Mijn eigen uitgaven &mdash; alle kaarten bij elkaar</span>';
+      (m.eigenUitgaven || []).forEach(function (u, i) {
+        h += '<div class="rij">' +
+          '<input type="text" data-bind="' + p + 'eigenUitgaven.' + i + '.omschrijving" value="' + U.esc(u.omschrijving) + '" placeholder="Revolut / ABN / Amex">' +
+          '<input type="number" step="0.01" data-bind="' + p + 'eigenUitgaven.' + i + '.bedrag" value="' + M.getal(u.bedrag) + '">' +
+          '<button class="weg" data-actie="uitgave-weg" data-i="' + i + '" title="regel weg">&times;</button></div>';
+      });
+      h += '<div class="knoppen" style="margin-top:.4rem">' +
+        '<button class="knop zacht mini" data-actie="uitgave-erbij">+ regel</button>' +
+        '<span class="zacht num" style="margin-left:auto">totaal ' + U.euro(M.eigenUitgavenTotaal(m), true) + '</span></div>';
+      h += '<span class="u" style="margin-bottom:1rem">Het model ziet hier &eacute;&eacute;n getal in. Welke kaart het was maakt niet uit.</span></div>';
+
+      h += '<label class="veld"><span class="t">Notitie &mdash; de uitschieter van deze maand</span>' +
+        '<textarea data-bind="' + p + 'notitie" placeholder="Nieuwe laptop, bruiloft, tandarts...">' + U.esc(m.notitie || '') + '</textarea></label>';
+    }
+    h += '</div>';
+
+    // ---- rechterkolom: uitkomst
+    h += '<div class="kaart"><h3>Wat het model ervan maakt</h3><div id="live">' + liveHTML(state, sleutel) + '</div></div>';
+    h += '</div></section>';
+
+    // ---- reserveringen
+    h += '<section class="blok"><h2 class="kop">Reserveringen</h2><div class="kaart">' +
+      '<p class="notitie" style="margin-top:0">Geld dat binnen is maar al vergeven. Het gaat er v&oacute;&oacute;r de ' +
+      'surplusberekening af, en op de maand dat je het betaalt telt het niet n&oacute;g een keer als uitgave.</p>' +
+      '<div class="rij rij-res">' +
+      '<input type="text" id="res-naam" placeholder="Waarvoor?">' +
+      '<input type="number" step="0.01" id="res-bedrag" placeholder="Bedrag">' +
+      '<input type="month" id="res-inleg" value="' + U.esc(sleutel) + '" title="inleg in deze maand">' +
+      '<input type="month" id="res-verwacht" value="' + U.esc(M.maandPlus(sleutel, 3)) + '" title="verwachte betaalmaand">' +
+      '<button class="knop mini" data-actie="reservering-erbij">+</button></div>' +
+      '<div class="zachter" style="font-size:.8rem;margin-bottom:1rem">naam &middot; bedrag &middot; inlegmaand &middot; verwachte betaalmaand</div>';
+
+    if (!state.reserveringen.length) {
+      h += '<div class="zacht">Nog niets gereserveerd.</div>';
+    } else {
+      h += '<div class="tabel-scroll"><table class="lijst"><tr><th>Waarvoor</th><th>Inleg</th><th>Verwacht</th><th class="r">Bedrag</th><th></th><th></th></tr>';
+      state.reserveringen.slice().sort(function (a, b) { return (a.verwachteMaand || '') < (b.verwachteMaand || '') ? -1 : 1; })
+        .forEach(function (r) {
+          h += '<tr><td>' + U.esc(r.naam) + ' ' +
+            (r.betaaldMaand ? '<span class="chip klaar">betaald ' + U.esc(U.maandKort(r.betaaldMaand)) + '</span>'
+              : '<span class="chip open">open</span>') + '</td>' +
+            '<td class="zacht">' + U.esc(U.maandKort(r.inlegMaand)) + '</td>' +
+            '<td class="zacht">' + U.esc(U.maandKort(r.verwachteMaand)) + '</td>' +
+            '<td class="r">' + U.euro(r.bedrag) + '</td>' +
+            '<td class="r">' + (r.betaaldMaand
+              ? '<button class="knop zacht mini" data-actie="reservering-open" data-id="' + r.id + '">terugzetten</button>'
+              : '<button class="knop zacht mini" data-actie="reservering-afvinken" data-id="' + r.id + '">afvinken in ' + U.esc(U.maandKort(sleutel)) + '</button>') + '</td>' +
+            '<td class="r"><button class="weg" data-actie="reservering-weg" data-id="' + r.id + '">&times;</button></td></tr>';
+        });
+      h += '</table></div>';
+    }
+    h += '</div></section>';
+
+    // ---- voorgeschoten
+    h += '<section class="blok"><h2 class="kop">Voorgeschoten</h2><div class="kaart">' +
+      '<p class="notitie" style="margin-top:0">Geld dat je voorschiet en terugkrijgt. Telt voor nul mee in je budget.</p>' +
+      '<div class="rij rij-vs">' +
+      '<input type="text" id="vs-naam" placeholder="Werkdeclaratie, uitje met mijn broer...">' +
+      '<input type="number" step="0.01" id="vs-bedrag" placeholder="Bedrag">' +
+      '<input type="month" id="vs-maand" value="' + U.esc(sleutel) + '">' +
+      '<button class="knop mini" data-actie="voorschot-erbij">+</button></div>';
+    if (!state.voorschotten.length) {
+      h += '<div class="zacht">Niets openstaand.</div>';
+    } else {
+      h += '<div class="tabel-scroll"><table class="lijst"><tr><th>Wat</th><th>Maand</th><th class="r">Bedrag</th><th></th><th></th></tr>';
+      state.voorschotten.slice().reverse().forEach(function (v) {
+        h += '<tr><td>' + U.esc(v.naam) + ' ' +
+          (v.terugbetaaldMaand ? '<span class="chip klaar">terug</span>' : '<span class="chip open">open</span>') + '</td>' +
+          '<td class="zacht">' + U.esc(U.maandKort(v.maand)) + '</td>' +
+          '<td class="r">' + U.euro(v.bedrag) + '</td>' +
+          '<td class="r">' + (v.terugbetaaldMaand
+            ? '<button class="knop zacht mini" data-actie="voorschot-open" data-id="' + v.id + '">terugzetten</button>'
+            : '<button class="knop zacht mini" data-actie="voorschot-terug" data-id="' + v.id + '">terugbetaald</button>') + '</td>' +
+          '<td class="r"><button class="weg" data-actie="voorschot-weg" data-id="' + v.id + '">&times;</button></td></tr>';
+      });
+      h += '</table></div>';
+    }
+    h += '</div></section></div>';
+    return h;
+  }
+
+  root.Invoer = {
+    render: render, liveHTML: liveHTML, maandIndex: maandIndex, zorgVoorMaand: zorgVoorMaand
+  };
+})(window);
+
+
+/* Instellingen. Alles wat het model gebruikt staat hier. Niets is hardcoded. */
+(function (root) {
+  'use strict';
+  var M = root.Model, U = root.UI;
+
+  function veld(label, pad, waarde, opties) {
+    opties = opties || {};
+    return '<label class="veld"><span class="t">' + label + '</span>' +
+      '<input type="' + (opties.type || 'number') + '" step="' + (opties.step || '0.01') + '"' +
+      (opties.min != null ? ' min="' + opties.min + '"' : '') +
+      (opties.max != null ? ' max="' + opties.max + '"' : '') +
+      ' data-bind="' + pad + '" value="' + U.esc(waarde == null ? '' : waarde) + '"' +
+      (opties.placeholder ? ' placeholder="' + U.esc(opties.placeholder) + '"' : '') + '>' +
+      (opties.uitleg ? '<span class="u">' + opties.uitleg + '</span>' : '') + '</label>';
+  }
+
+  function render(state) {
+    var root = window;
+    var i = state.instellingen;
+    var a = M.berekenAlles(state);
+    var h = '<div class="wrap">';
+
+    // ---- vaste lasten
+    h += '<section class="blok"><h2 class="kop">Vaste lasten</h2><div class="rooster k2">';
+    h += '<div class="kaart"><h3>Wonen &amp; eten (gezamenlijke pas)</h3>' +
+      veld('Mijn deel van de gezamenlijke pas', 'instellingen.gezamenlijkePasMijnDeelPct', i.gezamenlijkePasMijnDeelPct,
+        { step: '1', min: 0, max: 100, uitleg: 'Percentage van het totaal dat van de gezamenlijke rekening afgaat. 50% = eerlijk delen met je partner.' }) +
+      veld('Gepland maandbedrag', 'instellingen.gezamenlijkePasPlan', i.gezamenlijkePasPlan,
+        { uitleg: 'Alleen gebruikt zolang er nog geen maand is ingevuld. Daarna reken ik met wat je echt invulde.' }) +
+      '</div>';
+
+    h += '<div class="kaart"><h3>Overig</h3>';
+    (i.vasteLastenOverig || []).forEach(function (v, k) {
+      h += '<div class="rij"><input type="text" data-bind="instellingen.vasteLastenOverig.' + k + '.naam" value="' + U.esc(v.naam) + '">' +
+        '<input type="number" step="0.01" data-bind="instellingen.vasteLastenOverig.' + k + '.bedrag" value="' + M.getal(v.bedrag) + '">' +
+        '<button class="weg" data-actie="vastelast-weg" data-i="' + k + '">&times;</button></div>';
+    });
+    h += '<div class="knoppen" style="margin-top:.5rem"><button class="knop zacht mini" data-actie="vastelast-erbij">+ regel</button>' +
+      '<span class="zacht num" style="margin-left:auto">totaal ' + U.euro(M.vasteLastenOverigTotaal(i), true) + ' p/m</span></div></div>';
+    h += '</div></section>';
+
+    // ---- verdeling
+    h += '<section class="blok"><h2 class="kop">Verdeling</h2><div class="rooster k2">';
+    h += '<div class="kaart"><h3>Surplus splitsen</h3>' +
+      veld('Naar investeren', 'instellingen.surplusInvesterenPct', i.surplusInvesterenPct,
+        { step: '1', min: 0, max: 100, uitleg: 'De rest, ' + U.pct(100 - M.getal(i.surplusInvesterenPct)) + ', is je besteedbare geld.' }) +
+      veld('Naar autopot, na de oorlogskas', 'instellingen.autopotPctNaOorlogskas', i.autopotPctNaOorlogskas,
+        { step: '1', min: 0, max: 100, uitleg: 'Van wat er na de oorlogskas overblijft. De rest (' + U.pct(100 - M.getal(i.autopotPctNaOorlogskas)) + ') gaat naar beleggen.' }) +
+      '</div>';
+
+    h += '<div class="kaart"><h3>Oorlogskas</h3>' +
+      veld('Aantal maanden burn rate', 'instellingen.oorlogskasMaanden', i.oorlogskasMaanden,
+        { step: '0.5', min: 0, uitleg: 'Doel = dit aantal &times; je totale maandelijkse burn rate, dus inclusief de gezamenlijke pas en je dagelijkse uitgaven.' }) +
+      veld('Vast doelbedrag (leeg = berekenen)', 'instellingen.oorlogskasDoelHandmatig', i.oorlogskasDoelHandmatig,
+        { placeholder: 'leeg laten', uitleg: 'Nu: doel ' + U.euro(a.oorlogskasDoel) + (a.oorlogskasDoelIsSchatting ? ' (schatting, nog geen maand ingevuld)' : ' op basis van gemeten burn ' + U.euro(a.gemiddeldeBurn) + ' p/m') }) +
+      '</div>';
+
+    h += '<div class="kaart"><h3>Jaarruimte</h3>' +
+      veld('Deel van de beleggingsinleg', 'instellingen.jaarruimteDeelVanBeleggenPct', i.jaarruimteDeelVanBeleggenPct,
+        { step: '1', min: 0, max: 100, uitleg: '0 = uit. Zet je dit hoger, dan gaat dat deel van je beleggingsinleg naar een apart jaarruimte-potje.' }) +
+      veld('Doel per jaar', 'instellingen.jaarruimteDoelPerJaar', i.jaarruimteDoelPerJaar, { uitleg: '0 = geen doel.' }) +
+      '</div>';
+
+    h += '<div class="kaart"><h3>Beginstanden</h3>' +
+      '<p class="notitie" style="margin-top:0">Wat er al stond voordat je begon te loggen.</p>' +
+      veld('Oorlogskas', 'instellingen.startSaldi.oorlogskas', i.startSaldi.oorlogskas) +
+      veld('Autopot', 'instellingen.startSaldi.autopot', i.startSaldi.autopot) +
+      veld('Beleggen', 'instellingen.startSaldi.beleggen', i.startSaldi.beleggen) +
+      veld('Jaarruimte', 'instellingen.startSaldi.jaarruimte', i.startSaldi.jaarruimte) +
+      veld('Besteedbaar (buffer)', 'instellingen.startSaldi.besteedbaar', i.startSaldi.besteedbaar) +
+      '</div>';
+    h += '</div></section>';
+
+    // ---- auto-ladder
+    h += '<section class="blok"><h2 class="kop">Auto-ladder</h2><div class="kaart">' +
+      '<p class="notitie" style="margin-top:0">Tredes en bedragen. Alles aanpasbaar; de volgorde bepaalt het bedrag, niet de regel.</p>';
+    (i.autoLadder || []).forEach(function (t, k) {
+      h += '<div class="rij"><input type="text" data-bind="instellingen.autoLadder.' + k + '.naam" value="' + U.esc(t.naam) + '">' +
+        '<input type="number" step="100" data-bind="instellingen.autoLadder.' + k + '.vanaf" value="' + M.getal(t.vanaf) + '">' +
+        '<button class="weg" data-actie="trede-weg" data-i="' + k + '">&times;</button></div>';
+    });
+    h += '<div class="knoppen" style="margin-top:.5rem"><button class="knop zacht mini" data-actie="trede-erbij">+ trede</button></div>';
+    h += '</div></section>';
+
+    // ---- projectie
+    h += '<section class="blok"><h2 class="kop">Projectie</h2><div class="rooster k2"><div class="kaart">' +
+      veld('Rendement per jaar', 'instellingen.rendementPct', i.rendementPct,
+        { step: '0.1', uitleg: 'Wordt maandelijks samengesteld. Elke &euro; 100 nu = ' + U.euro(M.honderdEuroOver(10, i.rendementPct), true) + ' over 10 jaar.' }) +
+      veld('Aantal jaren', 'instellingen.projectieJaren', i.projectieJaren, { step: '1', min: 1 }) +
+      veld('&quot;Strenger&quot;: extra per maand', 'instellingen.strengerExtraPerMaand', i.strengerExtraPerMaand,
+        { uitleg: 'De tweede lijn in de grafiek.' }) +
+      '</div><div class="kaart">' +
+      veld('Gewenst maandinkomen', 'instellingen.gewenstMaandinkomen', i.gewenstMaandinkomen) +
+      veld('Opnamepercentage', 'instellingen.opnamePct', i.opnamePct,
+        { step: '0.1', uitleg: 'Financi&euml;le vrijheid = ' + U.euro(M.vrijheidsBedrag(i)) + '.' }) +
+      veld('Weken per maand', 'instellingen.wekenPerMaand', i.wekenPerMaand,
+        { step: '0.01', uitleg: 'Voor het weekbedrag. Standaard 4,33.' }) +
+      '</div></div></section>';
+
+    // ---- data
+    h += '<section class="blok"><h2 class="kop">Gegevens</h2><div class="kaart">' +
+      '<p class="notitie" style="margin-top:0">' + (root.GEDEELDE_OPSLAG
+        ? 'Je gegevens staan in deze link zelf, plus een kopie op dit toestel. Open je de link op je telefoon, ' +
+          'dan zie je wat je op je laptop invulde &mdash; en andersom. De nieuwste van de twee wint. ' +
+          'Geen account, geen bankkoppeling.'
+        : 'Alles staat lokaal in deze browser. Geen account, geen cloud, geen bankkoppeling. ' +
+          'Wis je je browsergegevens, dan is het weg &mdash; exporteer af en toe.') + '</p>' +
+      '<div class="knoppen">' +
+      '<button class="knop" data-actie="export">Exporteren (JSON)</button>' +
+      '<button class="knop zacht" data-actie="import">Importeren</button>' +
+      '<input type="file" id="import-bestand" accept="application/json" style="display:none">' +
+      '<button class="knop gevaar" data-actie="reset" style="margin-left:auto">Alles wissen</button>' +
+      '</div></div></section></div>';
+    return h;
+  }
+
+  root.Instellingen = { render: render };
+})(window);
+
+
+/* Opslag voor de gedeelde versie: de pagina schrijft zichzelf weg.
+   Elke wijziging gaat direct naar dit toestel (localStorage) en, zodra je
+   even niets doet, naar de gedeelde link zelf. De nieuwste van de twee wint
+   bij het openen, dus je kunt op je telefoon verder waar je laptop stopte. */
+(function (root) {
+  'use strict';
+
+  var FONTS = "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap\">";
+  var SCHIL = "<header class=\"top\">\n  <div class=\"top-in\">\n    <div class=\"merk\">Salaris Monitor <span>&mdash; jouw tempo, doorgetrokken</span></div>\n    <nav class=\"tabs\">\n      <button data-actie=\"tab\" data-tab=\"dashboard\" class=\"actief\">Dashboard</button>\n      <button data-actie=\"tab\" data-tab=\"invoer\">Invoer</button>\n      <button data-actie=\"tab\" data-tab=\"instellingen\">Instellingen</button>\n    </nav>\n  </div>\n</header>\n<main id=\"app\"></main>\n<div class=\"opslag\" id=\"opslag\" title=\"Tik om nu op te slaan\"><i></i><span>opgeslagen</span></div>";
+  var SLEUTEL_UI = 'salaris-monitor-ui';
+
+  root.GEDEELDE_OPSLAG = true;
+
+  var origLaden = root.Store.laden;
+  var origBewaren = root.Store.bewaren;
+
+  function ingebakken() {
+    var e = document.getElementById('staat');
+    if (!e) return null;
+    try {
+      var d = JSON.parse(e.textContent || 'null');
+      return d && (d.maanden || d.instellingen) ? d : null;
+    } catch (err) { return null; }
+  }
+
+  // De nieuwste van (deze link) en (dit toestel) wint.
+  root.Store.laden = function () {
+    var lokaal = null;
+    try { lokaal = JSON.parse(localStorage.getItem(root.Store.SLEUTEL) || 'null'); } catch (e) { /* leeg */ }
+    var link = ingebakken();
+    var winnaar = link;
+    if (lokaal && (!link || (lokaal.bewaardOp || 0) > (link.bewaardOp || 0))) winnaar = lokaal;
+    if (winnaar) {
+      try { localStorage.setItem(root.Store.SLEUTEL, JSON.stringify(winnaar)); } catch (e) { /* vol */ }
+    }
+    return origLaden.call(root.Store);
+  };
+
+  root.Store.bewaren = function (data) {
+    data.bewaardOp = Date.now();
+    origBewaren.call(root.Store, data);
+    plan();
+  };
+
+  // ---------------------------------------------------------------- UI-staat
+  try {
+    var u = JSON.parse(localStorage.getItem(SLEUTEL_UI) || 'null');
+    if (u && u.tab) root.beginUI = { tab: u.tab, maand: u.maand };
+  } catch (e) { /* niks */ }
+
+  function bewaarUI() {
+    if (!root.App) return;
+    try {
+      localStorage.setItem(SLEUTEL_UI, JSON.stringify({
+        tab: root.App.ui.tab, maand: root.App.ui.maand, scroll: window.scrollY
+      }));
+    } catch (e) { /* niks */ }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      try {
+        var u = JSON.parse(localStorage.getItem(SLEUTEL_UI) || 'null');
+        if (u && u.scroll) window.scrollTo(0, u.scroll);
+      } catch (e) { /* niks */ }
+    }, 0);
+  });
+
+  // ------------------------------------------------------------- indicator
+  var lampje;
+  function toon(klas, tekst, blijf) {
+    if (!lampje) lampje = document.getElementById('opslag');
+    if (!lampje) return;
+    lampje.className = 'opslag zichtbaar ' + klas;
+    lampje.lastChild.textContent = tekst;
+    clearTimeout(toon.t);
+    if (!blijf) toon.t = setTimeout(function () { lampje.className = 'opslag ' + klas; }, 2200);
+  }
+
+  // -------------------------------------------------------------- publiceren
+  var artefact = null, gevraagd = false, bezig = false, vuil = false, klok = null;
+
+  if (root.claude && root.claude.use) {
+    gevraagd = true;
+    root.claude.use('artifact').then(function (a) {
+      artefact = a;
+      if (!a) toon('mis', 'alleen op dit toestel');
+      else if (vuil) plan();
+    }).catch(function () { toon('mis', 'alleen op dit toestel'); });
+  }
+
+  function inVeld() {
+    var a = document.activeElement;
+    return !!a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
+  }
+
+  function plan() {
+    vuil = true;
+    bewaarUI();
+    toon(gevraagd ? 'bezig' : 'mis', gevraagd ? 'opslaan…' : 'alleen op dit toestel');
+    clearTimeout(klok);
+    klok = setTimeout(probeer, 3000);
+  }
+
+  function probeer() {
+    if (!vuil || bezig) return;
+    if (!artefact) { if (gevraagd) { klok = setTimeout(probeer, 2000); } return; }
+    if (inVeld()) { klok = setTimeout(probeer, 2500); return; } // niet midden in het typen
+    bezig = true;
+    bewaarUI();
+    artefact.publish(bouwDocument()).then(function () {
+      vuil = false; bezig = false;
+      toon('klaar', 'opgeslagen op de link');
+    }).catch(function (e) {
+      bezig = false;
+      var code = e && e.code;
+      if (code === 'conflict') toon('mis', 'elders bijgewerkt', true);
+      else if (code === 'not_granted' || code === 'not_writer') { artefact = null; toon('mis', 'alleen-lezen: bewaard op dit toestel', true); }
+      else toon('mis', 'opslaan mislukt — staat wel op dit toestel', true);
+    });
+  }
+
+  // Een gepubliceerde pagina kan geen bestand aanbieden via een gewone link:
+  // dat loopt via de downloads-capability, met een bevestiging voor de viewer.
+  // Daarom hier altijd de link-fallback vervangen, ook als downloads ontbreekt.
+  var downloads = null;
+  root.bewaarBestand = function (naam, inhoud) {
+    if (!downloads) { toon('mis', 'downloaden kan hier niet — je gegevens staan in de link', true); return; }
+    downloads.save({ filename: naam, data: inhoud }).then(function () {
+      toon('klaar', 'bestand opgeslagen');
+    }).catch(function (e) {
+      var c = e && e.code;
+      toon('mis', c === 'declined' ? 'download geannuleerd' : 'downloaden lukte niet', true);
+    });
+  };
+  if (root.claude && root.claude.use) {
+    root.claude.use('downloads').then(function (d) { downloads = d; })
+      .catch(function () { /* blijft null */ });
+  }
+
+  window.addEventListener('pagehide', bewaarUI);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { bewaarUI(); }
+    else if (vuil) { clearTimeout(klok); klok = setTimeout(probeer, 1200); }
+  });
+
+  // Tik op het lampje = nu opslaan.
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('#opslag')) { clearTimeout(klok); probeer(); }
+  });
+
+  // ------------------------------------------------------------ de pagina zelf
+  // Wordt opgebouwd uit de bron van deze pagina (stijl + code, ongewijzigd)
+  // plus de huidige gegevens. Nooit uit de getekende DOM.
+  function bouwDocument() {
+    var stijl = document.getElementById('stijl').textContent;
+    var code = document.getElementById('code').textContent;
+    var data = JSON.stringify(root.App.state()).replace(/</g, '\\u003c');
+    var eind = '</' + 'script>';
+    return '<!doctype html>\n<html lang="nl">\n<head>\n<meta charset="utf-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
+      '<meta name="color-scheme" content="dark">\n<title>Salaris Monitor</title>\n' +
+      FONTS + '\n<style id="stijl">' + stijl + '</style>\n</head>\n<body>\n' +
+      SCHIL + '\n<script id="staat" type="application/json">' + data + eind + '\n' +
+      '<script id="code">' + code + eind + '\n</body>\n</html>';
+  }
+})(window);
+
+
+/* Lijm: schermen, binding, acties. */
+(function (root) {
+  'use strict';
+  var M = root.Model, U = root.UI, S = root.Store;
+
+  var state = S.laden();
+  var ui = root.beginUI || { tab: 'dashboard', maand: M.maandSleutel() };
+
+  var el = { app: null, tabs: null };
+
+  function bewaar() { S.bewaren(state); }
+
+  function render() {
+    var h;
+    if (ui.tab === 'invoer') h = root.Invoer.render(state, ui.maand);
+    else if (ui.tab === 'instellingen') h = root.Instellingen.render(state);
+    else h = root.Dashboard.render(state);
+    el.app.innerHTML = h;
+    Array.prototype.forEach.call(el.tabs.querySelectorAll('button'), function (b) {
+      b.classList.toggle('actief', b.dataset.tab === ui.tab);
+    });
+  }
+
+  // Nooit hertekenen terwijl je in een veld staat: dat wist je selectie en je
+  // cursor. We wachten netjes tot je het formulier verlaat.
+  var timer = null, rendernodig = false;
+
+  function inFormulier() {
+    var a = document.activeElement;
+    return !!a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && el.app.contains(a);
+  }
+
+  function herteken() {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      if (inFormulier()) { rendernodig = true; ververLive(); return; }
+      rendernodig = false;
+      render();
+    }, 0);
+  }
+
+  document.addEventListener('focusout', function () {
+    setTimeout(function () {
+      if (rendernodig && !inFormulier()) { rendernodig = false; render(); }
+    }, 0);
+  });
+
+  function ververLive() {
+    var doel = document.getElementById('live');
+    if (doel) doel.innerHTML = root.Invoer.liveHTML(state, ui.maand);
+  }
+
+  // ------------------------------------------------------------- databinding
+  function pakWaarde(inp) {
+    if (inp.type === 'number') {
+      if (inp.value.trim() === '') return inp.dataset.bind.indexOf('Handmatig') > -1 ? null : 0;
+      var n = parseFloat(inp.value.replace(',', '.'));
+      return isFinite(n) ? n : 0;
+    }
+    return inp.value;
+  }
+
+  document.addEventListener('input', function (e) {
+    var inp = e.target;
+    if (!inp.dataset || !inp.dataset.bind) return;
+    U.zetPad(state, inp.dataset.bind, pakWaarde(inp));
+    bewaar();
+    if (ui.tab === 'invoer') ververLive();
+  });
+
+  document.addEventListener('change', function (e) {
+    var inp = e.target;
+    if (inp.dataset && inp.dataset.actie === 'kies-maand') {
+      ui.maand = inp.value; render(); return;
+    }
+    if (inp.id === 'import-bestand' && inp.files && inp.files[0]) {
+      var lezer = new FileReader();
+      lezer.onload = function () {
+        try {
+          var d = JSON.parse(lezer.result);
+          if (!d || typeof d !== 'object') throw new Error('geen object');
+          state = Object.assign(S.leeg(), d);
+          state.instellingen = Object.assign(S.leeg().instellingen, d.instellingen || {});
+          bewaar(); render();
+        } catch (err) { alert('Kon dit bestand niet lezen: ' + err.message); }
+      };
+      lezer.readAsText(inp.files[0]);
+      return;
+    }
+    if (inp.dataset && inp.dataset.bind) {
+      U.zetPad(state, inp.dataset.bind, pakWaarde(inp));
+      bewaar(); herteken();
+    }
+  });
+
+  // ------------------------------------------------------------------ acties
+  function waarde(id) {
+    var e = document.getElementById(id);
+    return e ? e.value.trim() : '';
+  }
+  function nummer(id) {
+    var v = waarde(id).replace(',', '.');
+    var n = parseFloat(v);
+    return isFinite(n) ? n : 0;
+  }
+  function huidigeMaand() { return root.Invoer.maandIndex(state, ui.maand); }
+
+  var acties = {
+    tab: function (d) { ui.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
+
+    'nieuwe-maand': function () {
+      var v = waarde('nieuwe-maand-veld');
+      if (v) { ui.maand = v; render(); window.scrollTo({ top: 0 }); }
+    },
+    'maand-aanmaken': function (d) {
+      root.Invoer.zorgVoorMaand(state, d.maand || ui.maand);
+      bewaar(); render();
+    },
+    'maand-weg': function () {
+      if (!confirm('Maand ' + U.maandLabel(ui.maand) + ' verwijderen?')) return;
+      state.maanden = state.maanden.filter(function (m) { return m.maand !== ui.maand; });
+      bewaar(); render();
+    },
+    'uitgave-erbij': function () {
+      var i = huidigeMaand(); if (i < 0) return;
+      state.maanden[i].eigenUitgaven = state.maanden[i].eigenUitgaven || [];
+      state.maanden[i].eigenUitgaven.push({ omschrijving: '', bedrag: 0 });
+      bewaar(); render();
+    },
+    'uitgave-weg': function (d) {
+      var i = huidigeMaand(); if (i < 0) return;
+      state.maanden[i].eigenUitgaven.splice(parseInt(d.i, 10), 1);
+      bewaar(); render();
+    },
+
+    'reservering-erbij': function () {
+      var naam = waarde('res-naam'), bedrag = nummer('res-bedrag');
+      if (!naam || !bedrag) { alert('Naam en bedrag invullen.'); return; }
+      state.reserveringen.push({
+        id: S.id(), naam: naam, bedrag: bedrag,
+        inlegMaand: waarde('res-inleg') || ui.maand,
+        verwachteMaand: waarde('res-verwacht') || ui.maand,
+        betaaldMaand: null
+      });
+      bewaar(); render();
+    },
+    'reservering-afvinken': function (d) {
+      state.reserveringen.forEach(function (r) { if (r.id === d.id) r.betaaldMaand = ui.maand; });
+      bewaar(); render();
+    },
+    'reservering-open': function (d) {
+      state.reserveringen.forEach(function (r) { if (r.id === d.id) r.betaaldMaand = null; });
+      bewaar(); render();
+    },
+    'reservering-weg': function (d) {
+      state.reserveringen = state.reserveringen.filter(function (r) { return r.id !== d.id; });
+      bewaar(); render();
+    },
+
+    'voorschot-erbij': function () {
+      var naam = waarde('vs-naam'), bedrag = nummer('vs-bedrag');
+      if (!naam || !bedrag) { alert('Naam en bedrag invullen.'); return; }
+      state.voorschotten.push({
+        id: S.id(), naam: naam, bedrag: bedrag,
+        maand: waarde('vs-maand') || ui.maand, terugbetaaldMaand: null
+      });
+      bewaar(); render();
+    },
+    'voorschot-terug': function (d) {
+      state.voorschotten.forEach(function (v) { if (v.id === d.id) v.terugbetaaldMaand = ui.maand; });
+      bewaar(); render();
+    },
+    'voorschot-open': function (d) {
+      state.voorschotten.forEach(function (v) { if (v.id === d.id) v.terugbetaaldMaand = null; });
+      bewaar(); render();
+    },
+    'voorschot-weg': function (d) {
+      state.voorschotten = state.voorschotten.filter(function (v) { return v.id !== d.id; });
+      bewaar(); render();
+    },
+
+    'vastelast-erbij': function () {
+      state.instellingen.vasteLastenOverig.push({ naam: '', bedrag: 0 });
+      bewaar(); render();
+    },
+    'vastelast-weg': function (d) {
+      state.instellingen.vasteLastenOverig.splice(parseInt(d.i, 10), 1);
+      bewaar(); render();
+    },
+    'trede-erbij': function () {
+      var l = state.instellingen.autoLadder;
+      var hoogste = l.length ? M.getal(l[l.length - 1].vanaf) : 0;
+      l.push({ naam: 'Nieuwe trede', vanaf: hoogste + 10000 });
+      bewaar(); render();
+    },
+    'trede-weg': function (d) {
+      state.instellingen.autoLadder.splice(parseInt(d.i, 10), 1);
+      bewaar(); render();
+    },
+
+    export: function () {
+      var naam = 'salaris-monitor-' + M.maandSleutel() + '.json';
+      var json = JSON.stringify(state, null, 2);
+      if (root.bewaarBestand) { root.bewaarBestand(naam, json); return; }
+      var blob = new Blob([json], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = naam;
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    },
+    import: function () { document.getElementById('import-bestand').click(); },
+    reset: function () {
+      if (!confirm('Alles wissen? Alle maanden, reserveringen en instellingen verdwijnen.')) return;
+      S.wissen(); state = S.leeg(); render();
+    }
+  };
+
+  document.addEventListener('click', function (e) {
+    var knop = e.target.closest('[data-actie]');
+    if (!knop || knop.tagName === 'SELECT') return;
+    var fn = acties[knop.dataset.actie];
+    if (fn) { e.preventDefault(); fn(knop.dataset); }
+  });
+
+  // Voor de opslaglaag van de gedeelde versie.
+  root.App = {
+    ui: ui,
+    render: function () { render(); },
+    state: function () { return state; }
+  };
+
+  // ------------------------------------------------------------------- start
+  document.addEventListener('DOMContentLoaded', function () {
+    el.app = document.getElementById('app');
+    el.tabs = document.querySelector('nav.tabs');
+    render();
+  });
+})(window);
+
+</script>

@@ -4,7 +4,7 @@
   var M = root.Model, U = root.UI, S = root.Store;
 
   var state = S.laden();
-  var ui = { tab: 'dashboard', maand: M.maandSleutel() };
+  var ui = root.beginUI || { tab: 'dashboard', maand: M.maandSleutel() };
 
   var el = { app: null, tabs: null };
 
@@ -199,10 +199,13 @@
     },
 
     export: function () {
-      var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      var naam = 'salaris-monitor-' + M.maandSleutel() + '.json';
+      var json = JSON.stringify(state, null, 2);
+      if (root.bewaarBestand) { root.bewaarBestand(naam, json); return; }
+      var blob = new Blob([json], { type: 'application/json' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'salaris-monitor-' + M.maandSleutel() + '.json';
+      a.download = naam;
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     },
@@ -219,6 +222,13 @@
     var fn = acties[knop.dataset.actie];
     if (fn) { e.preventDefault(); fn(knop.dataset); }
   });
+
+  // Voor de opslaglaag van de gedeelde versie.
+  root.App = {
+    ui: ui,
+    render: function () { render(); },
+    state: function () { return state; }
+  };
 
   // ------------------------------------------------------------------- start
   document.addEventListener('DOMContentLoaded', function () {
