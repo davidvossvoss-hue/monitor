@@ -40,12 +40,12 @@
   // Patronen worden hoofdletterongevoelig getoetst op tegenpartij + omschrijving.
   var REGELS = [
     ['creditcard',   'american express|amex.*kaartrekening|hartelijk bedankt voor uw betaling'],
-    ['sparen',       '\\b(to|from)\\b.*(flexible cash|savings|vault|pocket|robo portfolio|carta|investment account)|flexible cash funds|robo portfolio|degiro|meesman|brand new day|bitvavo|kraken|coinbase'],
+    ['sparen',       '\\b(to|from)\\b.*(flexible cash|savings|vault|pocket|robo portfolio|carta|investment account)|flexible cash funds|robo portfolio|degiro|meesman|brand new day|bitvavo|kraken|coinbase|flatex|interactive brokers|saxo'],
     ['intern',       'open banking top.?up|top.?up by|eigen rekening|overboeking naar eigen|naar eigen rekening'],
     ['salaris',      'salaris|loon|wedde|periodenr'],
     ['inkomen-ov',   'toeslag|teruggaaf|belastingdienst.*teruggave|declaratie|vakantiegeld|refund|terugbetaling'],
     ['gezamenlijk',  'gezamenlijke rekening|gezamenlijke pas|huishoudpot'],
-    ['wonen',        '\\bhuur\\b|huurtoeslag|hypotheek|\\bvve\\b|woningstichting|makelaar|vereniging van eigenaren'],
+    ['wonen',        'taxateur|taxatie|notaris|hypotheekadvies|container|klusbedrijf|\\bhuur\\b|huurtoeslag|hypotheek|\\bvve\\b|woningstichting|makelaar|vereniging van eigenaren'],
     ['energie',      'vattenfall|eneco|essent|greenchoice|budget energie|vandebron|oxxio|nuts|vitens|waternet|pwn|dunea|evides|waterschap'],
     ['zorgpremie',   'zilveren kruis|zorgverzekering|cz groep|vgz|menzis|ohra|fbto|dsw|achmea zorg'],
     ['bankkosten',   'kaartlidmaatschap|maandtariferingsnota|premium plan fee|metal plan fee|betaalpakket|kosten betaalrekening|bankkosten'],
@@ -58,7 +58,7 @@
     ['belasting',    'belastingdienst|openbaar lichaam belasting|gemeente|cjib|waterschapsbelasting|omgevingsdienst|rijksoverheid'],
     ['boodschappen', 'albert heijn|jumbo|lidl|aldi|plus supermarkt|dirk van den broek|picnic|coop|spar|vomar|hoogvliet|ekoplaza|marqt|kruidvat|etos|slager|bakker'],
     ['ueten',        'thuisbezorgd|uber ?eats|deliveroo|dominos|new york pizza|mcdonald|burger king|kfc|starbucks|coffee|caf[eé]|restaurant|brasserie|bistro|eetcafe|snackbar|febo|subway'],
-    ['vervoer',      'motorfiets|shell|bp |esso|tango|tinq|total ?energies|total |q8|ns groep|ns-|nederlandse spoorwegen|ov.?chip|gvb|ret\\b|htm|arriva|connexxion|q.?park|parkeer|parkmobile|yellowbrick|greenwheels|uber\\b|bolt\\.eu|taxi'],
+    ['vervoer',      'snappcar|autotechniek|autotechnie|garage|motorfiets|shell|bp |esso|tango|tinq|total ?energies|total |q8|ns groep|ns-|nederlandse spoorwegen|ov.?chip|gvb|ret\\b|htm|arriva|connexxion|q.?park|parkeer|parkmobile|yellowbrick|greenwheels|uber\\b|bolt\\.eu|taxi'],
     ['spullen',      'vinted|bol\\.com|coolblue|amazon|zalando|about you|h&m|zara|uniqlo|primark|decathlon|hema|action|ikea|gamma|praxis|karwei|mediamarkt|blokker|wehkamp|marktplaats'],
     ['vrijetijd',    'path[eé]|kinepolis|ticketmaster|steam|playstation|nintendo|xbox|bioscoop|museum|concert|festival|boekhandel|libris'],
     ['reizen',       'twisted road|booking\\.com|airbnb|klm|transavia|ryanair|easyjet|tui|expedia|hotel|hostel|schiphol|rentalcars|sunweb'],
@@ -99,6 +99,11 @@
     var eigen = (opties.eigenRekeningen || []).map(function (x) {
       return String(x).toUpperCase().replace(/[^A-Z0-9]/g, '');
     }).filter(function (x) { return x.length >= 8; });
+    // Rekeningen van een ander soort, bijvoorbeeld de gezamenlijke rekening:
+    // geld daarheen is wél een uitgave, maar met een eigen categorie.
+    var gemerkt = (opties.rekeningen || []).map(function (r) {
+      return { kaal: String(r.patroon).toUpperCase().replace(/[^A-Z0-9]/g, ''), categorie: r.categorie };
+    }).filter(function (r) { return r.kaal.length >= 8; });
 
     transacties.forEach(function (t) {
       if (handmatig[t.id]) {
@@ -108,8 +113,13 @@
         t.categorie = geleerd[t.sleutel]; t.toegekendDoor = 'geleerd'; return;
       }
       var tekst = t.tegenpartij + ' ' + t.omschrijving;
-      if (eigen.length) {
+      if (eigen.length || gemerkt.length) {
         var kaal = tekst.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        for (var g = 0; g < gemerkt.length; g++) {
+          if (kaal.indexOf(gemerkt[g].kaal) > -1) {
+            t.categorie = gemerkt[g].categorie; t.toegekendDoor = 'rekening'; return;
+          }
+        }
         for (var e = 0; e < eigen.length; e++) {
           if (kaal.indexOf(eigen[e]) > -1) {
             t.categorie = 'intern'; t.toegekendDoor = 'eigen rekening'; return;

@@ -50,19 +50,33 @@
       return { leeg: true, reden: 'Nog geen volledige maand ingelezen.' };
     }
 
-    // Inkomen: de mediaan, zodat één bonus of dertiende maand het beeld niet kantelt.
-    var inkomen = rond(A.mediaan(maanden.map(function (m) { return m.inkomen; })));
+    function gemiddeld(veld) {
+      return rond(maanden.reduce(function (t, m) { return t + m[veld]; }, 0) / maanden.length);
+    }
 
-    // Vaste lasten: wat de app zelf herkend heeft als terugkerend. Valt dat
-    // weg, dan het gemeten gemiddelde.
-    var vast = analyse.vasteLasten.length ? analyse.vasteLastenPerMaand
-      : rond(maanden.reduce(function (t, m) { return t + m.vast; }, 0) / maanden.length);
+    // Bij een wisselend inkomen zeggen twee getallen iets anders: het
+    // gemiddelde is wat er over de hele periode binnenkwam, de mediaan is wat
+    // een doorsnee maand oplevert. We rekenen met het gemiddelde en tonen
+    // allebei.
+    var inkomen = gemiddeld('inkomen');
+    var inkomenMediaan = rond(A.mediaan(maanden.map(function (m) { return m.inkomen; })));
+    var inkomenLaagste = Math.min.apply(null, maanden.map(function (m) { return m.inkomen; }));
+    var inkomenHoogste = Math.max.apply(null, maanden.map(function (m) { return m.inkomen; }));
+
+    // Vaste lasten: alles wat gemeten in een vaste categorie viel. De
+    // automatisch herkende abonnementen zijn daar een deelverzameling van en
+    // dienen om te laten zien wáár het heen gaat.
+    var vast = gemiddeld('vast');
 
     // Stuurbare uitgaven per categorie: gemeten en gewenst.
     var stuurbaar = [];
     analyse.categorieen.forEach(function (c) {
       if (c.soort !== 'variabel') return;
-      var gemeten = rond(Math.abs(c.totaal) / maanden.length);
+      // Alleen de maanden die meetellen, niet de halve maand aan het begin
+      // of het eind van je uitdraai.
+      var somMaanden = 0;
+      maanden.forEach(function (m) { somMaanden += Math.abs(c.maanden[m.maand] || 0); });
+      var gemeten = rond(somMaanden / maanden.length);
       if (gemeten < 1) return;
       var streef = inst.streef[c.id] == null ? gemeten : R.getal(inst.streef[c.id]);
       stuurbaar.push({
@@ -78,7 +92,7 @@
     });
     stuurbaar.sort(function (a, b) { return b.gemeten - a.gemeten; });
 
-    var sparenGemeten = rond(maanden.reduce(function (t, m) { return t + m.sparen; }, 0) / maanden.length);
+    var sparenGemeten = gemiddeld('sparen');
 
     var burnNu = rond(vast + variabelGemeten);
     var burnPlan = rond(vast + variabelStreef);
@@ -157,7 +171,12 @@
       maandenGebruikt: maanden.length,
       periode: analyse.periode,
       inkomen: inkomen,
+      inkomenMediaan: inkomenMediaan,
+      inkomenLaagste: rond(inkomenLaagste),
+      inkomenHoogste: rond(inkomenHoogste),
+      inkomenWisselt: inkomenHoogste > inkomenLaagste * 1.5,
       vasteLasten: rond(vast),
+      vasteLastenHerkend: analyse.vasteLastenPerMaand,
       variabelGemeten: variabelGemeten,
       variabelStreef: variabelStreef,
       sparenGemeten: sparenGemeten,

@@ -44,6 +44,9 @@
     var drempel = opties.drempel || 25;
     var perBedrag = {};
     transacties.forEach(function (t) {
+      // Wat jij of een rekeningregel al heeft vastgelegd, blijft staan: een
+      // toevallig gelijk bedrag mag dat niet omgooien.
+      if (t.toegekendDoor === 'handmatig' || t.toegekendDoor === 'rekening') return;
       var sleutel = Math.abs(t.bedrag).toFixed(2);
       (perBedrag[sleutel] = perBedrag[sleutel] || []).push(t);
     });
