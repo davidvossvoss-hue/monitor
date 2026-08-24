@@ -1,11 +1,10 @@
 {
   "name": "salaris-monitor",
   "version": "1.0.0",
-  "description": "Persoonlijke financiële monitor: surplus verdelen, autopot volgen, vermogen doortrekken.",
+  "description": "Bankafschriften inlezen, analyseren en er een planner van maken.",
   "private": true,
   "scripts": {
-    "test": "node src/model.test.js",
-    "bouw": "node build/bouw.js",
-    "start": "npx --yes http-server . -p 8080 -c-1"
+    "test": "node src/analyse.test.js",
+    "voorbeeld": "node voorbeeld/maak-voorbeeld.js"
   }
 }
