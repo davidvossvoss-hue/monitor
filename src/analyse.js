@@ -14,16 +14,22 @@
     return Math.round((new Date(b) - new Date(a)) / 86400000);
   }
   function rond(n) { return Math.round(n * 100) / 100; }
+  function getalOf(x, standaard) {
+    var n = typeof x === 'string' ? parseFloat(x.replace(',', '.')) : x;
+    return typeof n === 'number' && isFinite(n) ? n : standaard;
+  }
 
   // -------------------------------------------------------------- ontdubbelen
   // Dezelfde uitdraai twee keer inladen mag niets veranderen; overlappende
   // periodes evenmin.
-  function ontdubbel(lijsten) {
+  function ontdubbel(lijsten, aandelen) {
     var gezien = {}, uit = [], dubbel = 0;
     [].concat.apply([], lijsten).forEach(function (t) {
       if (gezien[t.id]) { dubbel++; return; }
       gezien[t.id] = true;
       // Deel je een rekening met iemand, dan telt maar jouw deel mee.
+      var opgegeven = aandelen && t.rekening != null ? aandelen[t.rekening] : null;
+      if (opgegeven != null) t.aandeel = getalOf(opgegeven, 100) / 100;
       if (t.aandeel != null && t.aandeel !== 1 && t.bedragVol == null) {
         t.bedragVol = t.bedrag;
         t.bedrag = Math.round(t.bedrag * t.aandeel * 100) / 100;
@@ -193,7 +199,7 @@
   // ------------------------------------------------------------- alles samen
   function analyseer(lijsten, opties) {
     opties = opties || {};
-    var ontdubbeld = ontdubbel(lijsten);
+    var ontdubbeld = ontdubbel(lijsten, opties.aandelen);
     var transacties = ontdubbeld.transacties;
 
     C.categoriseer(transacties, opties);

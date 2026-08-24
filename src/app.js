@@ -13,14 +13,20 @@
     var eigen = [], gemerkt = [];
     (staat.instellingen.rekeningen || []).forEach(function (r) {
       if (!r.patroon) return;
-      if (r.rol === 'gezamenlijk') gemerkt.push({ patroon: r.patroon, categorie: 'gezamenlijk' });
-      else if (r.rol === 'eigen') eigen.push(r.patroon);
+      if (r.rol === 'gezamenlijk') {
+        // Lees je het afschrift van die rekening óók in, dan is je overbooking
+        // ernaartoe geen uitgave meer — anders tel je eerst je storting en
+        // daarna de huur die ervan betaald wordt.
+        if (r.afschriftIngelezen) eigen.push(r.patroon);
+        else gemerkt.push({ patroon: r.patroon, categorie: 'gezamenlijk' });
+      } else if (r.rol === 'eigen') eigen.push(r.patroon);
     });
     return {
       handmatig: staat.handmatig,
       geleerd: staat.geleerd,
       eigenRekeningen: eigen,
       rekeningen: gemerkt,
+      aandelen: staat.instellingen.aandelen || {},
       negeerMaanden: staat.instellingen.negeerMaanden || []
     };
   }
@@ -123,6 +129,29 @@
   function isPdf(bestand) {
     return /\.pdf$/i.test(bestand.name) || bestand.type === 'application/pdf';
   }
+  function isJson(bestand) {
+    return /\.json$/i.test(bestand.name) || bestand.type === 'application/json';
+  }
+
+  // Een back-up van de app zelf mag je gewoon bij de afschriften gooien: hij
+  // voegt samen in plaats van te overschrijven.
+  function voegSamen(pakket) {
+    var uit = { transacties: [], nieuw: 0, dubbel: 0 };
+    if (pakket.instellingen) {
+      var oud = staat.instellingen;
+      staat.instellingen = Object.assign({}, oud, pakket.instellingen);
+      staat.instellingen.startSaldi = Object.assign({}, oud.startSaldi, pakket.instellingen.startSaldi || {});
+      // Rekeningen samenvoegen op patroon, niet vervangen.
+      var bekend = {};
+      (oud.rekeningen || []).forEach(function (r) { bekend[r.patroon] = r; });
+      (pakket.instellingen.rekeningen || []).forEach(function (r) { bekend[r.patroon] = r; });
+      staat.instellingen.rekeningen = Object.keys(bekend).map(function (k) { return bekend[k]; });
+    }
+    Object.keys(pakket.geleerd || {}).forEach(function (k) { staat.geleerd[k] = pakket.geleerd[k]; });
+    Object.keys(pakket.handmatig || {}).forEach(function (k) { staat.handmatig[k] = pakket.handmatig[k]; });
+    uit.transacties = pakket.transacties || [];
+    return uit;
+  }
 
   function leesEen(bestand) {
     if (isPdf(bestand)) {
@@ -134,6 +163,18 @@
         return Object.assign({ naam: bestand.name }, r);
       }).catch(function (e) {
         return { naam: bestand.name, fout: 'Kon deze PDF niet lezen: ' + (e && e.message ? e.message : e) };
+      });
+    }
+    if (isJson(bestand)) {
+      return bestand.text().then(function (tekst) {
+        var pakket = JSON.parse(tekst);
+        var samen = voegSamen(pakket);
+        return {
+          naam: bestand.name, bron: 'back-up van de app',
+          transacties: samen.transacties, rekeningen: [], eigenIbans: []
+        };
+      }).catch(function (e) {
+        return { naam: bestand.name, fout: 'Dit JSON-bestand kon ik niet lezen: ' + (e && e.message ? e.message : e) };
       });
     }
     return bestand.text().then(function (tekst) {
@@ -214,6 +255,7 @@
     },
     vergeet: function (d) { delete staat.geleerd[d.sleutel]; bewaar(); herbereken(); render(); },
     'streef-wis': function () { staat.instellingen.streef = {}; bewaar(); render(); },
+    'aandeel': function () { /* via change-afhandeling */ },
     'naast-aan': function () {
       staat.instellingen.autopotNaastOorlogskas = true;
       bewaar(); render();
