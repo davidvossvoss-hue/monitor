@@ -280,3 +280,54 @@ svg.grafiek { width: 100%; height: auto; display: block; }
   .mijlpaal .wanneer { grid-column: 1 / -1; font-size: .88rem; }
   table.lijst { font-size: .88rem; }
 }
+
+/* ------------------------------------------------------------- inlezen */
+.sleepvak {
+  border: 1px dashed var(--lijn-fel); border-radius: var(--r);
+  padding: 1.6rem; text-align: center; margin-top: 1rem;
+  transition: border-color .2s ease, background .2s ease;
+}
+.sleepvak.over { border-color: var(--amber); background: var(--amber-dof); }
+
+/* ------------------------------------------------- staafjes per categorie */
+.staaf-rij {
+  display: grid; grid-template-columns: minmax(140px, 1.1fr) minmax(60px, 2fr) auto;
+  gap: .8rem; align-items: center; padding: .5rem .3rem; border-radius: var(--r-s);
+  cursor: pointer;
+}
+.staaf-rij:hover { background: var(--vlak-2); }
+.staaf-naam { font-size: .93rem; }
+.staaf { height: 8px; border-radius: 999px; background: var(--vlak-3); overflow: hidden; }
+.staaf > i { display: block; height: 100%; border-radius: 999px; }
+.staaf-bedrag { font-size: .93rem; text-align: right; white-space: nowrap; }
+
+.rij-rek { grid-template-columns: 1fr 1.4fr 130px 40px; }
+
+nav.tabs button .teller {
+  display: inline-block; margin-left: .4rem; background: var(--amber); color: var(--grond);
+  border-radius: 999px; padding: 0 .38rem; font-size: .7rem; font-weight: 800; vertical-align: middle;
+}
+nav.tabs button.actief .teller { background: var(--grond); color: var(--tekst); }
+
+@media (max-width: 760px) {
+  .staaf-rij { grid-template-columns: 1fr auto; }
+  .staaf-rij .staaf { grid-column: 1 / -1; }
+  .rij-rek { grid-template-columns: 1fr 1fr; }
+  .rij-rek > :nth-child(3) { grid-column: 1 / 2; }
+  .rij-rek > :last-child { grid-column: 2 / 3; }
+}
+
+/* --------------------------------------------------------------- indelen */
+.indeel-rij {
+  display: grid; grid-template-columns: 1fr auto 200px; gap: .8rem; align-items: center;
+  padding: .6rem .2rem; border-bottom: 1px solid var(--lijn);
+}
+.indeel-rij:last-child { border-bottom: none; }
+.indeel-naam { font-size: .94rem; word-break: break-word; }
+.indeel-bedrag { font-size: .96rem; white-space: nowrap; }
+.indeel-keuze select { padding: .5rem .55rem; font-size: .92rem; }
+
+@media (max-width: 760px) {
+  .indeel-rij { grid-template-columns: 1fr auto; gap: .4rem .8rem; padding: .8rem .2rem; }
+  .indeel-keuze { grid-column: 1 / -1; }
+}

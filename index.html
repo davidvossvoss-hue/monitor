@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Geldmonitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="src/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="merk">Geldmonitor <span>&mdash; je eigen tempo, doorgetrokken</span></div>
+    <nav class="tabs">
+      <button data-actie="tab" data-tab="inlezen" class="actief">Inlezen</button>
+      <button data-actie="tab" data-tab="indelen">Indelen<span class="teller"></span></button>
+      <button data-actie="tab" data-tab="analyse">Analyse</button>
+      <button data-actie="tab" data-tab="planner">Planner</button>
+      <button data-actie="tab" data-tab="instellingen">Instellingen</button>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+<div class="opslag" id="opslag"><i></i><span>opgeslagen</span></div>
+<script type="module">
+  import * as pdfjsLib from './vendor/pdf.min.mjs';
+  window.pdfjsLib = pdfjsLib;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.mjs';
+</script>
+<script src="src/rekenen.js"></script>
+<script src="src/lezen.js"></script>
+<script src="src/lezen-pdf.js"></script>
+<script src="src/categorie.js"></script>
+<script src="src/analyse.js"></script>
+<script src="src/planner.js"></script>
+<script src="src/opslag.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/pdf-inlezen.js"></script>
+<script src="src/schermen.js"></script>
+<script src="src/planner-ui.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

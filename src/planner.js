@@ -11,6 +11,8 @@
     oorlogskasMaanden: 6,
     oorlogskasDoelHandmatig: null,
     autopotPctNaOorlogskas: 60,
+    autopotNaastOorlogskas: false,
+    autopotDeelNaast: 30,
     rendementPct: 7,
     projectieJaren: 20,
     gewenstMaandinkomen: 3000,
@@ -24,17 +26,23 @@
 
   function rond(n) { return Math.round(n * 100) / 100; }
 
-  // Geld dat overblijft verdeelt zich in strikte volgorde over de potjes.
+  // Geld dat overblijft verdeelt zich over de potjes. Standaard in strikte
+  // volgorde: eerst de oorlogskas vol, dan pas de auto. Zet je
+  // autopotNaastOorlogskas aan, dan gaat er meteen een vast deel naar de auto
+  // en loopt de oorlogskas met de rest vol — trager veilig, sneller rijden.
   function verdeel(ruimte, standOorlogskas, doelOorlogskas, inst) {
     var over = Math.max(0, ruimte);
+    var naast = inst.autopotNaastOorlogskas
+      ? over * R.getal(inst.autopotDeelNaast) / 100 : 0;
+    over -= naast;
     var tekort = Math.max(0, doelOorlogskas - standOorlogskas);
     var naarOorlogskas = Math.min(over, tekort);
     var rest = over - naarOorlogskas;
-    var naarAutopot = rest * R.getal(inst.autopotPctNaOorlogskas) / 100;
+    var uitRest = rest * R.getal(inst.autopotPctNaOorlogskas) / 100;
     return {
       oorlogskas: rond(naarOorlogskas),
-      autopot: rond(naarAutopot),
-      beleggen: rond(rest - naarAutopot),
+      autopot: rond(naast + uitRest),
+      beleggen: rond(rest - uitRest),
       tekort: ruimte < 0 ? rond(-ruimte) : 0
     };
   }
@@ -105,10 +113,12 @@
       ? R.getal(inst.oorlogskasDoelHandmatig)
       : rond(R.getal(inst.oorlogskasMaanden) * burnNu);
 
+    // Beginstanden zijn wat er nu staat, niet wat er nu staat plus wat je in
+    // de gemeten periode hebt ingelegd — dat zou dubbel tellen.
     var standen = {
       oorlogskas: R.getal(inst.startSaldi.oorlogskas),
       autopot: R.getal(inst.startSaldi.autopot),
-      beleggen: R.getal(inst.startSaldi.beleggen) + sparenGemeten * maanden.length
+      beleggen: R.getal(inst.startSaldi.beleggen)
     };
 
     var nu = verdeel(ruimteNu, standen.oorlogskas, doel, inst);
@@ -118,7 +128,8 @@
     function autopotOver(maandenVooruit, verdeling) {
       // Zolang de oorlogskas nog niet vol is loopt er niets naar de autopot;
       // daarna loopt het volledige tempo door.
-      var stand = standen.oorlogskas, pot = standen.autopot, ruimte = verdeling === nu ? ruimteNu : ruimtePlan;
+      var stand = standen.oorlogskas, pot = standen.autopot;
+      var ruimte = verdeling === nu ? ruimteNu : ruimtePlan;
       for (var m = 0; m < maandenVooruit; m++) {
         var v = verdeel(ruimte, stand, doel, inst);
         stand += v.oorlogskas; pot += v.autopot;

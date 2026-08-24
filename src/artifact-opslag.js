@@ -7,38 +7,38 @@
 
   var FONTS = '__FONTS__';
   var SCHIL = '__SCHIL__';
-  var SLEUTEL_UI = 'salaris-monitor-ui';
+  var SLEUTEL_UI = 'monitor-ui';
 
   root.GEDEELDE_OPSLAG = true;
 
-  var origLaden = root.Store.laden;
-  var origBewaren = root.Store.bewaren;
+  var origLaden = root.Opslag.laden;
+  var origBewaren = root.Opslag.bewaren;
 
   function ingebakken() {
     var e = document.getElementById('staat');
     if (!e) return null;
     try {
       var d = JSON.parse(e.textContent || 'null');
-      return d && (d.maanden || d.instellingen) ? d : null;
+      return d && (d.transacties || d.instellingen) ? d : null;
     } catch (err) { return null; }
   }
 
   // De nieuwste van (deze link) en (dit toestel) wint.
-  root.Store.laden = function () {
+  root.Opslag.laden = function () {
     var lokaal = null;
-    try { lokaal = JSON.parse(localStorage.getItem(root.Store.SLEUTEL) || 'null'); } catch (e) { /* leeg */ }
+    try { lokaal = JSON.parse(localStorage.getItem(root.Opslag.SLEUTEL) || 'null'); } catch (e) { /* leeg */ }
     var link = ingebakken();
     var winnaar = link;
     if (lokaal && (!link || (lokaal.bewaardOp || 0) > (link.bewaardOp || 0))) winnaar = lokaal;
     if (winnaar) {
-      try { localStorage.setItem(root.Store.SLEUTEL, JSON.stringify(winnaar)); } catch (e) { /* vol */ }
+      try { localStorage.setItem(root.Opslag.SLEUTEL, JSON.stringify(winnaar)); } catch (e) { /* vol */ }
     }
-    return origLaden.call(root.Store);
+    return origLaden.call(root.Opslag);
   };
 
-  root.Store.bewaren = function (data) {
+  root.Opslag.bewaren = function (data) {
     data.bewaardOp = Date.now();
-    origBewaren.call(root.Store, data);
+    origBewaren.call(root.Opslag, data);
     plan();
   };
 
@@ -153,15 +153,20 @@
   // Wordt opgebouwd uit de bron van deze pagina (stijl + code, ongewijzigd)
   // plus de huidige gegevens. Nooit uit de getekende DOM.
   function bouwDocument() {
-    var stijl = document.getElementById('stijl').textContent;
-    var code = document.getElementById('code').textContent;
-    var data = JSON.stringify(root.App.state()).replace(/</g, '\\u003c');
+    function bron(id) {
+      var e = document.getElementById(id);
+      return e ? e.textContent : '';
+    }
     var eind = '</' + 'script>';
+    var data = JSON.stringify(root.App.state()).replace(/</g, '\\u003c');
     return '<!doctype html>\n<html lang="nl">\n<head>\n<meta charset="utf-8">\n' +
       '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
-      '<meta name="color-scheme" content="dark">\n<title>Salaris Monitor</title>\n' +
-      FONTS + '\n<style id="stijl">' + stijl + '</style>\n</head>\n<body>\n' +
-      SCHIL + '\n<script id="staat" type="application/json">' + data + eind + '\n' +
-      '<script id="code">' + code + eind + '\n</body>\n</html>';
+      '<meta name="color-scheme" content="dark">\n<title>Geldmonitor</title>\n' +
+      FONTS + '\n<style id="stijl">' + bron('stijl') + '</style>\n</head>\n<body>\n' +
+      SCHIL + '\n' +
+      '<script id="pdf-worker" type="text/plain">' + bron('pdf-worker') + eind + '\n' +
+      '<script id="pdf-main" type="module">' + bron('pdf-main') + eind + '\n' +
+      '<script id="staat" type="application/json">' + data + eind + '\n' +
+      '<script id="code">' + bron('code') + eind + '\n</body>\n</html>';
   }
 })(window);

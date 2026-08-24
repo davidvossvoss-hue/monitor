@@ -6,17 +6,17 @@
   var nfEuro2 = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   function euro(n, decimalen) {
-    n = root.Model.getal(n);
+    n = root.Rekenen.getal(n);
     return (decimalen ? nfEuro2 : nfEuro0).format(n);
   }
   function euroKort(n) {
-    n = root.Model.getal(n);
+    n = root.Rekenen.getal(n);
     var a = Math.abs(n);
     if (a >= 1000000) return (n / 1000000).toFixed(a >= 10000000 ? 0 : 1).replace('.', ',') + ' mln';
     if (a >= 1000) return '€ ' + Math.round(n / 1000) + 'k';
     return euro(n);
   }
-  function pct(n) { return Math.round(root.Model.getal(n)) + '%'; }
+  function pct(n) { return Math.round(root.Rekenen.getal(n)) + '%'; }
 
   var MAANDNAMEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli',
     'augustus', 'september', 'oktober', 'november', 'december'];

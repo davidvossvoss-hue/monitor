@@ -1,10 +1,11 @@
 {
-  "name": "salaris-monitor",
+  "name": "geldmonitor",
   "version": "1.0.0",
   "description": "Bankafschriften inlezen, analyseren en er een planner van maken.",
   "private": true,
   "scripts": {
     "test": "node src/analyse.test.js",
+    "bouw": "node build/bouw.js",
     "voorbeeld": "node voorbeeld/maak-voorbeeld.js"
   }
 }
