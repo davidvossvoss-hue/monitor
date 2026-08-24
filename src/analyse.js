@@ -180,7 +180,8 @@
         if (maand && t.maand !== maand) return false;
         if (t.bedrag >= 0) return false;
         var soort = C.soortVan(t.categorie);
-        return soort !== 'intern' && soort !== 'vast' && !t.isVasteLast;
+        // Sparen is geen uitgave en een vaste last is geen verrassing.
+        return soort !== 'intern' && soort !== 'vast' && soort !== 'sparen' && !t.isVasteLast;
       })
       .sort(function (a, b) { return a.bedrag - b.bedrag; })
       .slice(0, aantal || 5);

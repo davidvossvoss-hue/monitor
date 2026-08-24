@@ -157,12 +157,32 @@
     return String(tekst || '').replace(/\s+/g, ' ').trim();
   }
 
+  // Nieuwere ABN-omschrijvingen komen in tagvorm: /TRTP/.../NAME/.../REMI/...
+  // In een PDF vallen daar regelafbrekingen middenin, dus /N AME/ komt voor.
+  var TRTP_TAGS = ['TRTP', 'CSID', 'NAME', 'MARF', 'REMI', 'IBAN', 'BIC', 'EREF',
+    'ADDR', 'ULTC', 'ULTD', 'SVCL', 'PURP', 'RTRN'];
+
+  function herstelTags(tekst) {
+    var s = tekst;
+    TRTP_TAGS.forEach(function (tag) {
+      var patroon = new RegExp('/\\s*' + tag.split('').join('\\s*') + '\\s*/', 'gi');
+      s = s.replace(patroon, '/' + tag + '/');
+    });
+    return s;
+  }
+
   function tegenpartijUit(omschrijving, bron) {
     var s = schoon(omschrijving);
+    if (/^\/[A-Z]{4}\//i.test(s) || /\/\s*N\s*A\s*M\s*E\s*\//i.test(s)) {
+      var hersteld = herstelTags(s);
+      var naam = hersteld.match(/\/NAME\/(.*?)(?:\/(?:REMI|IBAN|BIC|EREF|MARF|CSID|ADDR|ULTC|ULTD|RTRN)\/|$)/i);
+      if (naam) return schoon(naam[1]);
+    }
     if (bron === 'abnamro') {
       var m;
-      if ((m = s.match(/INCASSANT:\s*(.+?)(?:\s+(?:OMSCHRIJVING|MACHTIGING|KENMERK|IBAN|BIC|REK):|$)/i))) return schoon(m[1]);
-      if ((m = s.match(/NAAM:\s*(.+?)(?:\s+(?:OMSCHRIJVING|IBAN|BIC|KENMERK):|$)/i))) return schoon(m[1]);
+      // "Naam:" is de partij zelf; "Incassant:" is maar een incassonummer.
+      if ((m = s.match(/NAAM:\s*(.+?)(?:\s+(?:OMSCHRIJVING|MACHTIGING|KENMERK|IBAN|BIC|REK|INCASSANT):|$)/i))) return schoon(m[1]);
+      if ((m = s.match(/INCASSANT:\s*(.+?)(?:\s+(?:NAAM|OMSCHRIJVING|MACHTIGING|KENMERK|IBAN|BIC|REK):|$)/i))) return schoon(m[1]);
       if ((m = s.match(/^BEA,?\s*Betaalpas\s+(.+?)(?:,\s*PAS\d*|\s+NR:|$)/i))) return schoon(m[1]);
       if ((m = s.match(/^GEA,?\s*Betaalpas\s+(.+?)(?:,\s*PAS\d*|\s+NR:|$)/i))) return 'Geldautomaat ' + schoon(m[1]);
       if ((m = s.match(/^(?:SEPA\s+\w+\s*)+(.+)$/i))) return schoon(m[1]).slice(0, 60);
@@ -183,7 +203,10 @@
       .replace(/\b(B\.?V\.?|N\.?V\.?|UAB|LTD|GMBH|INC|SA|AG|EUROPE|NEDERLAND|NETHERLANDS|AMSTERDAM|ROTTERDAM|UTRECHT|DEN HAAG)\b/g, ' ')
       .replace(/[^A-Z0-9 ]+/g, ' ')
       .replace(/\s+/g, ' ')
-      .trim();
+      .trim()
+      // In een PDF valt een naam soms middenin af ("Zuid- Kenne merland");
+      // voor het groeperen negeren we spaties helemaal.
+      .replace(/ /g, '');
   }
 
   // ------------------------------------------------------------------- hash
@@ -333,6 +356,7 @@
     leesDatum: leesDatum,
     leesBedrag: leesBedrag,
     tegenpartijUit: tegenpartijUit,
+    herstelTags: herstelTags,
     sleutelVan: sleutelVan,
     raadScheidingsteken: raadScheidingsteken,
     splitsRegel: splitsRegel,
